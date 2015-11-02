@@ -4,7 +4,7 @@
 # License: GPL-2
 #
 
-SOURCES = main.c
+SOURCES = main.c panel.c
 
 OBJDIR  = obj
 BINDIR  = bin
