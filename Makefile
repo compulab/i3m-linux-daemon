@@ -4,7 +4,7 @@
 # License: GPL-2
 #
 
-SOURCES = main.c panel.c
+SOURCES = main.c panel.c sensors.c
 
 OBJDIR  = obj
 BINDIR  = bin
@@ -12,7 +12,7 @@ OUTFILE = $(BINDIR)/airtop-fpsvc
 
 OBJS    = $(SOURCES:%.c=$(OBJDIR)/%.o)
 CFLAGS  = -Wall
-LFLAGS  = -Wall
+LFLAGS  = -Wall -lsensors
 COMPILE_CMD = gcc $(CFLAGS)
 STRIP_CMD   = strip
 LINK_CMD    = gcc $(LFLAGS)
