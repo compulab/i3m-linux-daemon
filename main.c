@@ -9,8 +9,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <libgen.h>
+
+#include "panel.h"
+#include "sensors.h"
+
+struct cmdline_opt {
+	int i2c_bus;
+};
 
 static bool daemon_terminate = false;
+static struct cmdline_opt options;
 
 static void signal_handler(int signo)
 {
@@ -62,9 +72,73 @@ static int main_loop(void)
 	return 0;
 }
 
+/*
+ * Parse command line options:
+ * phase I:   set default options values
+ * phase II:  set options according to the command line
+ * phase III: test no options are missing, and they are correct
+ */
+static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *opts)
+{
+	const struct option long_options[] = {
+		{"i2c-bus",	required_argument,	0,	'b'},
+		{0,			0,					0,	0}
+	};
+
+	int c;
+	int option_index = 0;
+
+	/* initialize default values */
+	opts->i2c_bus = -1;
+
+	/* parse command line options */
+	while (true) {
+		c = getopt_long_only(argc, argv, "", long_options, &option_index);
+
+		switch (c) {
+		case -1:
+			/* no more valid options */
+			/* test nothing has left in argv[] */
+			if (argv[optind] == NULL)
+				goto getopt_out_ok;
+			/* fall through */
+
+		case '?':
+			/* invalid option */
+			goto getopt_out_err;
+
+		/* valid options */
+		case 'b':
+			opts->i2c_bus = strtol(optarg, NULL, 0);
+			break;
+		}
+	}
+
+getopt_out_ok:
+	/* test options validity */
+	if (opts->i2c_bus == -1)
+		goto getopt_out_err;
+
+	/* success */
+	return 0;
+
+getopt_out_err:
+	/* print usage */
+	fprintf(stderr, "Usage:\n" \
+					"%s --i2c-bus=N\n" \
+					"Where:\n" \
+					"--i2c-bus  is i2c bus number of the front panel\n",
+					basename(argv[0]));
+	return -1;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
+
+	ret = fpsvc_parse_cmdline_opts(argc, argv, &options);
+	if (ret < 0)
+		return ret;
 
 	initialize();
 	ret = main_loop();
