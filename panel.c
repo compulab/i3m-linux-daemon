@@ -21,7 +21,7 @@
  * Notice, there is no limitation on number of simultaneously opened devices
  * belonging to the same i2c bus.
  */
-int panel_open_i2c_device(int i2c_bus, int i2c_addr, int *fd)
+int panel_open_i2c_device(int i2c_bus, int i2c_addr)
 {
 	char i2c_devname[I2C_DEV_NAME_LENGTH];
 	int i2c_devnum;
@@ -44,8 +44,7 @@ int panel_open_i2c_device(int i2c_bus, int i2c_addr, int *fd)
 		goto i2c_out_err_1;
 	}
 
-	*fd = i2c_devnum;
-	return 0;
+	return i2c_devnum;
 
 i2c_out_err_1:
 	close(i2c_devnum);
@@ -92,33 +91,5 @@ int panel_set_temperature(int i2c_devnum, int cpu_id, int temp)
 		err = panel_write_byte(i2c_devnum, ATFP_REG_CPUTS, valid_mask);
 
 	return err;
-}
-
-
-void panel_i2c_test(void)
-{
-	int i2c_devnum;
-	unsigned i2c_addr = 0x21;
-	int err;
-	int count;
-
-	err = panel_open_i2c_device(8, i2c_addr, &i2c_devnum);
-	if (err < 0)
-		return;
-
-	count = 0;
-	while (1) {
-		err = panel_set_temperature(i2c_devnum, 0, (5 + count));
-		/* workaround panel firmware issue:
-		 * ATFP_REG_CPUTS writing always times out, due to looong internal processing time
-		 */
-		// if (err < 0)
-		// 	break;
-
-		printf(".");
-		sleep(1);
-		count = (count + 1) % 20;
-	}
-	printf("\n");
 }
 

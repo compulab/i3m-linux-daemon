@@ -21,6 +21,7 @@ struct cmdline_opt {
 
 static bool daemon_terminate = false;
 static struct cmdline_opt options;
+static int panel_desc;
 
 static void signal_handler(int signo)
 {
@@ -55,15 +56,25 @@ static void initialize(void)
 
 	setsid();
 	install_sighandler();
+	panel_desc = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
+	if (panel_desc < 0)
+		exit(1);
 }
 
 static void cleanup(void)
 {
+	close(panel_desc);
 }
 
 static int main_loop(void)
 {
+	int count = 0;
+
 	while ( !daemon_terminate ) {
+		/* test */
+		panel_set_temperature(panel_desc, 0/*CPU ID*/, (5 + count)/*temp.*/);
+		count = (count + 1) % 21;
+
 		printf(".");
 		fflush(stdout);
 		sleep(1);
