@@ -97,5 +97,21 @@
 #define ATFP_REG_RTCT			0x98
 #define ATFP_REG_RTCD			0x99
 
+/* 
+ * Bit flag offsets within the registers
+ */
+#define ATFP_OFFS_PENDR0_HDDTR		0
+#define ATFP_OFFS_PENDR0_CPUFR		1
+#define ATFP_OFFS_PENDR0_CPUTR		2
+#define ATFP_OFFS_PENDR0_GPUTR		3
+
+/* 
+ * Bit flag masks within the registers
+ */
+#define ATFP_MASK_PENDR0_HDDTR		(1 << ATFP_OFFS_PENDR0_HDDTR)
+#define ATFP_MASK_PENDR0_CPUFR		(1 << ATFP_OFFS_PENDR0_CPUFR)
+#define ATFP_MASK_PENDR0_CPUTR		(1 << ATFP_OFFS_PENDR0_CPUTR)
+#define ATFP_MASK_PENDR0_GPUTR		(1 << ATFP_OFFS_PENDR0_GPUTR)
+
 #endif	/* _REGISTERS_H */
 

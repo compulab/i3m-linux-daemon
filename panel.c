@@ -78,6 +78,29 @@ int panel_write_byte(int i2c_devnum, unsigned regno, int data)
 }
 
 
+/*
+ * Return a bitmap of pending requests. 
+ * In case of error: return 0 - meaning no requests. 
+ */
+long panel_get_pending_requests(int i2c_devnum)
+{
+	int value;
+
+	value = panel_read_byte(i2c_devnum, ATFP_REG_REQ);
+	if (value < 0)
+		return 0L;
+
+	/* no requests pending */
+	if ( !(value & 0x01) )
+		return 0L;
+
+	value = panel_read_byte(i2c_devnum, ATFP_REG_PENDR0);
+	if (value < 0)
+		return 0L;
+
+	return (long)value;
+}
+
 int panel_set_temperature(int i2c_devnum, int cpu_id, int temp)
 {
 	int err;

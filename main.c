@@ -12,6 +12,7 @@
 #include <getopt.h>
 #include <libgen.h>
 
+#include "registers.h"
 #include "panel.h"
 #include "sensors.h"
 
@@ -66,10 +67,48 @@ static void cleanup(void)
 	close(panel_desc);
 }
 
+#define UNSUPPORTED_REQ_MESSAGE(r)	do { fprintf(stderr, "%s: "#r" request is not supported \n", __FUNCTION__); } while (0)
+
 static int main_loop(void)
 {
-	while ( !daemon_terminate ) {
+	long request_bitmap;
+	long request;
+	int i;
 
+	while ( !daemon_terminate ) {
+		/* get pending requests */
+		request_bitmap = panel_get_pending_requests(panel_desc);
+
+		/* dispatch each request */
+		for (i = 0; i < (sizeof(request_bitmap) * 8); ++i) {
+			request = request_bitmap & (1 << i);
+			switch (request) {
+			case 0:
+				/* no pending requests */
+				break;
+
+			case ATFP_MASK_PENDR0_HDDTR:
+				UNSUPPORTED_REQ_MESSAGE(HDDTR);
+				break;
+
+			case ATFP_MASK_PENDR0_CPUFR:
+				UNSUPPORTED_REQ_MESSAGE(CPUFR);
+				break;
+
+			case ATFP_MASK_PENDR0_CPUTR:
+				UNSUPPORTED_REQ_MESSAGE(CPUTR);
+				break;
+
+			case ATFP_MASK_PENDR0_GPUTR:
+				UNSUPPORTED_REQ_MESSAGE(GPUTR);
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		sleep(3);
 	}
 
 	return 0;
