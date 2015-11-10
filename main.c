@@ -93,7 +93,7 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 {
 	const struct option long_options[] = {
 		{"i2c-bus",	required_argument,	0,	'b'},
-		{0,			0,					0,	0}
+		{0,		0,			0,	0}
 	};
 
 	int c;
@@ -136,10 +136,10 @@ getopt_out_ok:
 getopt_out_err:
 	/* print usage */
 	fprintf(stderr, "Usage:\n" \
-					"%s --i2c-bus=N\n" \
-					"Where:\n" \
-					"--i2c-bus  is i2c bus number of the front panel\n",
-					basename(argv[0]));
+			"%s --i2c-bus=N\n" \
+			"Where:\n" \
+			"--i2c-bus  is i2c bus number of the front panel\n",
+			basename(argv[0]));
 	return -1;
 }
 
