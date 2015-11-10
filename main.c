@@ -68,16 +68,8 @@ static void cleanup(void)
 
 static int main_loop(void)
 {
-	int count = 0;
-
 	while ( !daemon_terminate ) {
-		/* test */
-		panel_set_temperature(panel_desc, 0/*CPU ID*/, (5 + count)/*temp.*/);
-		count = (count + 1) % 21;
 
-		printf(".");
-		fflush(stdout);
-		sleep(1);
 	}
 
 	return 0;
