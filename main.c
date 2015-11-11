@@ -11,12 +11,14 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <libgen.h>
+#include <sensors/sensors.h>
 
 #include "registers.h"
 #include "panel.h"
 #include "sensors.h"
 
 struct cmdline_opt {
+	bool list_temp_sensors;
 	int i2c_bus;
 };
 
@@ -108,6 +110,7 @@ static int main_loop(void)
 			}
 		}
 
+		sensors_test();
 		sleep(3);
 	}
 
@@ -123,14 +126,16 @@ static int main_loop(void)
 static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *opts)
 {
 	const struct option long_options[] = {
-		{"i2c-bus",	required_argument,	0,	'b'},
-		{0,		0,			0,	0}
+		{"list-temp-sensors",	no_argument,		0,	't'},
+		{"i2c-bus",		required_argument,	0,	'b'},
+		{0,			0,			0,	0}
 	};
 
 	int c;
 	int option_index = 0;
 
 	/* initialize default values */
+	opts->list_temp_sensors = false;
 	opts->i2c_bus = -1;
 
 	/* parse command line options */
@@ -150,6 +155,9 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 			goto getopt_out_err;
 
 		/* valid options */
+		case 't':
+			opts->list_temp_sensors = true;
+			break;
 		case 'b':
 			opts->i2c_bus = strtol(optarg, NULL, 0);
 			break;
@@ -158,7 +166,8 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 
 getopt_out_ok:
 	/* test options validity */
-	if (opts->i2c_bus == -1)
+	if (!opts->list_temp_sensors &&
+	    opts->i2c_bus == -1)
 		goto getopt_out_err;
 
 	/* success */
@@ -167,9 +176,11 @@ getopt_out_ok:
 getopt_out_err:
 	/* print usage */
 	fprintf(stderr, "Usage:\n" \
+			"%s --list-temp-sensors\n" \
 			"%s --i2c-bus=N\n" \
 			"Where:\n" \
 			"--i2c-bus  is i2c bus number of the front panel\n",
+			basename(argv[0]),
 			basename(argv[0]));
 	return -1;
 }
@@ -181,6 +192,11 @@ int main(int argc, char *argv[])
 	ret = fpsvc_parse_cmdline_opts(argc, argv, &options);
 	if (ret < 0)
 		return ret;
+
+	if (options.list_temp_sensors) {
+		sensors_show(SENSORS_FEATURE_TEMP);
+		return 0;
+	}
 
 	initialize();
 	ret = main_loop();
