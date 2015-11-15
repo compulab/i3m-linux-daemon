@@ -8,7 +8,8 @@
 #define _SENSORS_H
 
 int sensors_show(int sens_feature_type);
-void sensors_test(void);
+int sensors_coretemp_init(void);
+int sensors_coretemp_read(int *core_id, int *temp);
 
 #endif	/* _SENSORS_H */
 

@@ -54,6 +54,8 @@ static void install_sighandler(void)
 
 static void initialize(void)
 {
+	int err;
+
 	if (fork() != 0)
 		exit(0);
 
@@ -62,11 +64,15 @@ static void initialize(void)
 	panel_desc = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
 	if (panel_desc < 0)
 		exit(1);
+	err = sensors_coretemp_init();
+	if ( err )
+		exit(1);
 }
 
 static void cleanup(void)
 {
 	close(panel_desc);
+	sensors_cleanup();
 }
 
 #define UNSUPPORTED_REQ_MESSAGE(r)	do { fprintf(stderr, "%s: "#r" request is not supported \n", __FUNCTION__); } while (0)
@@ -98,7 +104,26 @@ static int main_loop(void)
 				break;
 
 			case ATFP_MASK_PENDR0_CPUTR:
-				UNSUPPORTED_REQ_MESSAGE(CPUTR);
+				{
+					int temp;
+					int cpu_id = 0;
+					int cpu_id_save;
+					int err;
+
+					do {
+						cpu_id_save = cpu_id;
+						err = sensors_coretemp_read(&cpu_id, &temp);
+						if ( err )
+							break;
+
+						err = panel_set_temperature(panel_desc, cpu_id_save, temp);
+						if ( err )
+							break;
+
+						printf("CPUTR: Core %d : %d deg \n", cpu_id_save, temp);
+					} while (cpu_id >= 0);
+					printf("\n");
+				}
 				break;
 
 			case ATFP_MASK_PENDR0_GPUTR:
@@ -110,7 +135,6 @@ static int main_loop(void)
 			}
 		}
 
-		sensors_test();
 		sleep(3);
 	}
 
