@@ -13,18 +13,27 @@
 #include <libgen.h>
 #include <sensors/sensors.h>
 
+#include "common.h"
+#include "thread-pool.h"
 #include "registers.h"
 #include "panel.h"
 #include "sensors.h"
+#include "domain-logic.h"
 
 struct cmdline_opt {
 	bool list_temp_sensors;
 	int i2c_bus;
 };
 
+int panel_desc;
+ThreadPool *frontend_thread;
+ThreadPool *backend_thread;
+
 static bool daemon_terminate = false;
 static struct cmdline_opt options;
-static int panel_desc;
+
+static void main_thread(void *priv_context, void *shared_context);
+
 
 static void signal_handler(int signo)
 {
@@ -33,10 +42,14 @@ static void signal_handler(int signo)
 	case SIGTERM:
 		daemon_terminate = true;
 		break;
+
+	case SIGALRM:
+		thread_pool_add_request(frontend_thread, main_thread, NULL);
+		break;
 	}
 }
 
-static void install_sighandler(void)
+static void install_sighandler(int signo)
 {
 	struct sigaction sig = {{0}};
 	int err;
@@ -45,9 +58,9 @@ static void install_sighandler(void)
 	sigemptyset(&sig.sa_mask);
 	sig.sa_flags = SA_RESTART;
 
-	err = sigaction(SIGTERM, &sig, NULL);
+	err = sigaction(signo, &sig, NULL);
 	if (err) {
-		fprintf(stderr, "SIGTERM: could not install signal handler: %d \n", err);
+		fprintf(stderr, "Signal %d: could not install signal handler: %d \n", signo, err);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -60,85 +73,70 @@ static void initialize(void)
 		exit(0);
 
 	setsid();
-	install_sighandler();
+	install_sighandler(SIGTERM);
+	install_sighandler(SIGALRM);
 	panel_desc = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
 	if (panel_desc < 0)
 		exit(1);
 	err = sensors_coretemp_init();
 	if ( err )
 		exit(1);
+
+	frontend_thread = thread_pool_create(1, ATFP_FRONTEND_QUEUE_LEN, NULL);
+	backend_thread = thread_pool_create(ATFP_BACKEND_THREAD_NUM, ATFP_BACKEND_QUEUE_LEN, NULL);
 }
 
 static void cleanup(void)
 {
+	thread_pool_join(frontend_thread);
+	thread_pool_destroy(backend_thread);
+	thread_pool_destroy(frontend_thread);
+
 	close(panel_desc);
 	sensors_cleanup();
 }
 
 #define UNSUPPORTED_REQ_MESSAGE(r)	do { fprintf(stderr, "%s: "#r" request is not supported \n", __FUNCTION__); } while (0)
 
-static int main_loop(void)
+static void main_thread(void *priv_context, void *shared_context)
 {
+	int i;
 	long request_bitmap;
 	long request;
-	int i;
 
-	while ( !daemon_terminate ) {
-		/* get pending requests */
-		request_bitmap = panel_get_pending_requests(panel_desc);
+	request_bitmap = panel_get_pending_requests(panel_desc);
 
-		/* dispatch each request */
-		for (i = 0; i < (sizeof(request_bitmap) * 8); ++i) {
-			request = request_bitmap & (1 << i);
-			switch (request) {
-			case 0:
-				/* no pending requests */
-				break;
+	/* dispatch each request */
+	for (i = 0; i < (sizeof(request_bitmap) * 8); ++i) {
+		request = request_bitmap & (1L << i);
+		switch (request) {
+		case 0:
+			/* no pending requests */
+			break;
 
-			case ATFP_MASK_PENDR0_HDDTR:
-				UNSUPPORTED_REQ_MESSAGE(HDDTR);
-				break;
+		case ATFP_MASK_PENDR0_HDDTR:
+			UNSUPPORTED_REQ_MESSAGE(HDDTR);
+			break;
 
-			case ATFP_MASK_PENDR0_CPUFR:
-				UNSUPPORTED_REQ_MESSAGE(CPUFR);
-				break;
+		case ATFP_MASK_PENDR0_CPUFR:
+			UNSUPPORTED_REQ_MESSAGE(CPUFR);
+			break;
 
-			case ATFP_MASK_PENDR0_CPUTR:
-				{
-					int temp;
-					int cpu_id = 0;
-					int cpu_id_save;
-					int err;
+		case ATFP_MASK_PENDR0_CPUTR:
+			panel_update_temperature();
+			break;
 
-					do {
-						cpu_id_save = cpu_id;
-						err = sensors_coretemp_read(&cpu_id, &temp);
-						if ( err )
-							break;
+		case ATFP_MASK_PENDR0_GPUTR:
+			UNSUPPORTED_REQ_MESSAGE(GPUTR);
+			break;
 
-						err = panel_set_temperature(panel_desc, cpu_id_save, temp);
-						if ( err )
-							break;
-
-						printf("CPUTR: Core %d : %d deg \n", cpu_id_save, temp);
-					} while (cpu_id >= 0);
-					printf("\n");
-				}
-				break;
-
-			case ATFP_MASK_PENDR0_GPUTR:
-				UNSUPPORTED_REQ_MESSAGE(GPUTR);
-				break;
-
-			default:
-				break;
-			}
+		default:
+			break;
 		}
-
-		sleep(3);
 	}
 
-	return 0;
+	/* program our next appearance */
+	alarm(ATFP_MAIN_POLL_CYCLE);
 }
 
 /*
@@ -211,11 +209,11 @@ getopt_out_err:
 
 int main(int argc, char *argv[])
 {
-	int ret;
+	int err;
 
-	ret = fpsvc_parse_cmdline_opts(argc, argv, &options);
-	if (ret < 0)
-		return ret;
+	err = fpsvc_parse_cmdline_opts(argc, argv, &options);
+	if (err < 0)
+		return err;
 
 	if (options.list_temp_sensors) {
 		sensors_show(SENSORS_FEATURE_TEMP);
@@ -223,9 +221,18 @@ int main(int argc, char *argv[])
 	}
 
 	initialize();
-	ret = main_loop();
-	cleanup();
 
-	return ret;
+	thread_pool_add_request(frontend_thread, main_thread, NULL);
+
+	/* hold main process */
+	while ( !daemon_terminate ) {
+		sleep(10);
+		printf(".");
+		fflush(stdout);
+	}
+	printf("Daemon exit. \n");
+
+	cleanup();
+	return 0;
 }
 

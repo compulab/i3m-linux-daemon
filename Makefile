@@ -4,7 +4,7 @@
 # License: GPL-2
 #
 
-SOURCES = main.c panel.c sensors.c queue.c thread-pool.c
+SOURCES = main.c panel.c sensors.c queue.c thread-pool.c domain-logic.c
 
 OBJDIR  = obj
 BINDIR  = bin
