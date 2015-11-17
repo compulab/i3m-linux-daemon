@@ -94,24 +94,31 @@ ThreadPool *thread_pool_create(int thread_count, int queue_size, void *shared_co
 	return p;
 }
 
-void thread_pool_destroy(ThreadPool *p)
+void thread_pool_join(ThreadPool *p)
 {
 	int i;
 
-	/* join all the threads */
 	for (i = 0; i < p->thread_count; ++i) {
 		pthread_cancel(p->thread_pool[i]);
 	}
+
 	for (i = 0; i < p->thread_count; ++i) {
 		pthread_join(p->thread_pool[i], NULL);
 	}
+
+	p->thread_count = 0;
+}
+
+void thread_pool_destroy(ThreadPool *p)
+{
+	thread_pool_join(p);
 
 	pthread_mutex_destroy(&p->lock);
 	pthread_cond_destroy(&p->queue_not_empty);
 	pthread_cond_destroy(&p->queue_not_full);
 	queue_destroy(p->work_queue);
 	/* zero everything against evil eye */
-	memset(p, 0, (sizeof(ThreadPool) + (sizeof(pthread_t) * p->thread_count)));
+	memset(p, 0, sizeof(ThreadPool));
 	free(p);
 }
 

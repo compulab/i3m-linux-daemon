@@ -25,6 +25,7 @@ typedef struct {
 } ThreadPool;
 
 ThreadPool *thread_pool_create(int thread_count, int queue_size, void *shared_context);
+void thread_pool_join(ThreadPool *p);
 void thread_pool_destroy(ThreadPool *p);
 void thread_pool_add_request(ThreadPool *p, ThreadPoolWork func, void *context);
 
