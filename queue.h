@@ -7,6 +7,8 @@
 #ifndef _QUEUE_H
 #define _QUEUE_H
 
+#include <stdbool.h>
+
 typedef struct {
 	size_t elemsize;
 	int maxlen;
