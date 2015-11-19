@@ -21,6 +21,7 @@
 #include "domain-logic.h"
 
 struct cmdline_opt {
+	bool display_help;
 	bool list_temp_sensors;
 	int i2c_bus;
 };
@@ -148,6 +149,7 @@ static void main_thread(void *priv_context, void *shared_context)
 static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *opts)
 {
 	const struct option long_options[] = {
+		{"help",		no_argument,		0,	'h'},
 		{"list-temp-sensors",	no_argument,		0,	't'},
 		{"i2c-bus",		required_argument,	0,	'b'},
 		{0,			0,			0,	0}
@@ -157,6 +159,7 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 	int option_index = 0;
 
 	/* initialize default values */
+	opts->display_help = false;
 	opts->list_temp_sensors = false;
 	opts->i2c_bus = -1;
 
@@ -169,7 +172,7 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 			/* no more valid options */
 			/* test nothing has left in argv[] */
 			if (argv[optind] == NULL)
-				goto getopt_out_ok;
+				goto getopt_out_test_validity;
 			/* fall through */
 
 		case '?':
@@ -177,6 +180,9 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 			goto getopt_out_err;
 
 		/* valid options */
+		case 'h':
+			opts->display_help = true;
+			break;
 		case 't':
 			opts->list_temp_sensors = true;
 			break;
@@ -186,22 +192,34 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 		}
 	}
 
-getopt_out_ok:
+getopt_out_test_validity:
+	/* a special case */
+	if (opts->display_help)
+		goto getopt_out_err;
+
 	/* test options validity */
-	if (!opts->list_temp_sensors &&
-	    opts->i2c_bus == -1)
+	if (opts->list_temp_sensors)
+		goto getopt_out_ok;
+
+	if (opts->i2c_bus == -1)
+		opts->i2c_bus = panel_lookup_i2c_bus();
+
+	if (opts->i2c_bus == -1)
 		goto getopt_out_err;
 
 	/* success */
+getopt_out_ok:
 	return 0;
 
 getopt_out_err:
 	/* print usage */
 	fprintf(stderr, "Usage:\n" \
+			"%s --help\n" \
 			"%s --list-temp-sensors\n" \
-			"%s --i2c-bus=N\n" \
+			"%s [--i2c-bus=N]\n" \
 			"Where:\n" \
 			"--i2c-bus  is i2c bus number of the front panel\n",
+			basename(argv[0]),
 			basename(argv[0]),
 			basename(argv[0]));
 	return -1;

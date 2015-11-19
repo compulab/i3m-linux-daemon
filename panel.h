@@ -18,7 +18,7 @@ int panel_write_byte(int i2c_devnum, unsigned regno, int data);
 long panel_get_pending_requests(int i2c_devnum);
 int panel_set_temperature(int i2c_devnum, int cpu_id, int temp);
 
-void panel_i2c_test(void);
+int panel_lookup_i2c_bus(void);
 
 #endif	/* _PANEL_H */
 
