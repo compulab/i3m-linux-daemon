@@ -14,6 +14,14 @@
 #include "registers.h"
 #include "i2c-tools.h"
 
+
+/* 
+ * Panel descriptor. 
+ * Panel descriptor is managed as a singleton object. 
+ */
+static int panel = -1;
+
+
 /*
  * Open i2c-connected device identified by {i2c-bus:addr} tuple.
  * Notice, there is no limitation on number of simultaneously opened devices
@@ -23,6 +31,11 @@ int panel_open_i2c_device(int i2c_bus, int i2c_addr)
 {
 	int i2c_devnum;
 	int err = 0;
+
+	if (panel >= 0) {
+		fprintf(stderr, "panel i2c device is already open \n");
+		return panel;
+	}
 
 	i2c_devnum = open_i2c_dev(i2c_bus);
 	if (i2c_devnum < 0) {
@@ -37,6 +50,7 @@ int panel_open_i2c_device(int i2c_bus, int i2c_addr)
 		goto i2c_out_err1;
 	}
 
+	panel = i2c_devnum;
 	return i2c_devnum;
 
 i2c_out_err1:
@@ -46,16 +60,17 @@ i2c_out_err0:
 	return err;
 }
 
-void panel_close_i2c_device(int i2c_devnum)
+void panel_close(void)
 {
-	close(i2c_devnum);
+	close(panel);
+	panel = -1;
 }
 
-int panel_read_byte(int i2c_devnum, unsigned regno)
+int panel_read_byte(unsigned regno)
 {
 	int value;
 
-	value = i2c_smbus_read_byte_data(i2c_devnum, regno);
+	value = i2c_smbus_read_byte_data(panel, regno);
 	if (value < 0) {
 		fprintf(stderr, "Could not read register %02x: %d \n", regno, value);
 	}
@@ -63,11 +78,11 @@ int panel_read_byte(int i2c_devnum, unsigned regno)
 	return value;
 }
 
-int panel_write_byte(int i2c_devnum, unsigned regno, int data)
+int panel_write_byte(unsigned regno, int data)
 {
 	int err;
 
-	err = i2c_smbus_write_byte_data(i2c_devnum, regno, data);
+	err = i2c_smbus_write_byte_data(panel, regno, data);
 	if (err < 0) {
 		fprintf(stderr, "Could not write register %02x: %d \n", regno, err);
 	}
@@ -114,11 +129,11 @@ lookup_out:
  * Return a bitmap of pending requests. 
  * In case of error: return 0 - meaning no requests. 
  */
-long panel_get_pending_requests(int i2c_devnum)
+long panel_get_pending_requests(void)
 {
 	int value;
 
-	value = panel_read_byte(i2c_devnum, ATFP_REG_REQ);
+	value = panel_read_byte(ATFP_REG_REQ);
 	if (value < 0)
 		return 0L;
 
@@ -126,14 +141,14 @@ long panel_get_pending_requests(int i2c_devnum)
 	if ( !(value & 0x01) )
 		return 0L;
 
-	value = panel_read_byte(i2c_devnum, ATFP_REG_PENDR0);
+	value = panel_read_byte(ATFP_REG_PENDR0);
 	if (value < 0)
 		return 0L;
 
 	return (long)value;
 }
 
-int panel_set_temperature(int i2c_devnum, int cpu_id, int temp)
+int panel_set_temperature(int cpu_id, int temp)
 {
 	int err;
 	int temp_reg = ATFP_REG_CPU0T + cpu_id;
@@ -141,9 +156,9 @@ int panel_set_temperature(int i2c_devnum, int cpu_id, int temp)
 
 	/* assert((cpu_id >= 0) && (cpu_id <= 7)); */
 
-	err = panel_write_byte(i2c_devnum, temp_reg, temp);
+	err = panel_write_byte(temp_reg, temp);
 	if ( !err )
-		err = panel_write_byte(i2c_devnum, ATFP_REG_CPUTS, valid_mask);
+		err = panel_write_byte(ATFP_REG_CPUTS, valid_mask);
 
 	return err;
 }

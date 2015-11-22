@@ -26,7 +26,6 @@ struct cmdline_opt {
 	int i2c_bus;
 };
 
-int panel_desc;
 ThreadPool *frontend_thread;
 ThreadPool *backend_thread;
 
@@ -69,6 +68,7 @@ static void install_sighandler(int signo)
 static void initialize(void)
 {
 	int err;
+	int panel;
 
 	if (fork() != 0)
 		exit(0);
@@ -76,8 +76,8 @@ static void initialize(void)
 	setsid();
 	install_sighandler(SIGTERM);
 	install_sighandler(SIGALRM);
-	panel_desc = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
-	if (panel_desc < 0)
+	panel = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
+	if (panel < 0)
 		exit(1);
 	err = sensors_coretemp_init();
 	if ( err )
@@ -93,7 +93,7 @@ static void cleanup(void)
 	thread_pool_destroy(backend_thread);
 	thread_pool_destroy(frontend_thread);
 
-	panel_close_i2c_device(panel_desc);
+	panel_close();
 	sensors_cleanup();
 }
 
@@ -105,7 +105,7 @@ static void main_thread(void *priv_context, void *shared_context)
 	long request_bitmap;
 	long request;
 
-	request_bitmap = panel_get_pending_requests(panel_desc);
+	request_bitmap = panel_get_pending_requests();
 
 	/* dispatch each request */
 	for (i = 0; i < (sizeof(request_bitmap) * 8); ++i) {

@@ -31,7 +31,7 @@ static void set_temperature(void *priv_context, void *shared_context)
 	for (core_id = 0; core_id < context->num_sensors; ++core_id) {
 		temp = context->temp[core_id];
 		printf("CPUTR: Core %d: %d [deg] \n", core_id, temp);
-		err = panel_set_temperature(panel_desc, core_id, temp);
+		err = panel_set_temperature(core_id, temp);
 		if ( err )
 			break;
 	}

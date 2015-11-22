@@ -9,7 +9,6 @@
 
 #include "thread-pool.h"
 
-extern int panel_desc;
 extern ThreadPool *frontend_thread;
 extern ThreadPool *backend_thread;
 
