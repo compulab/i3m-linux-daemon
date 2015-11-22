@@ -12,6 +12,7 @@
 #define I2C_DEV_NAME_LENGTH		32
 
 int panel_open_i2c_device(int i2c_bus, int i2c_addr);
+void panel_close_i2c_device(int i2c_devnum);
 int panel_read_byte(int i2c_devnum, unsigned regno);
 int panel_write_byte(int i2c_devnum, unsigned regno, int data);
 

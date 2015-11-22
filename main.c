@@ -93,7 +93,7 @@ static void cleanup(void)
 	thread_pool_destroy(backend_thread);
 	thread_pool_destroy(frontend_thread);
 
-	close(panel_desc);
+	panel_close_i2c_device(panel_desc);
 	sensors_cleanup();
 }
 
