@@ -82,6 +82,15 @@ int panel_write_byte(unsigned regno, int data)
 {
 	int err;
 
+	/*
+	 * Guarantee some time to finish processing of the previous transaction.
+	 * TODO:
+	 * The ATFP controller should implement transaction failing mechanism
+	 * whenever it is not ready to accept next transaction, then we will
+	 * retry after a delay.
+	 */
+	usleep(10000);
+
 	err = i2c_smbus_write_byte_data(panel, regno, data);
 	if (err < 0) {
 		fprintf(stderr, "Could not write register %02x: %d \n", regno, err);
