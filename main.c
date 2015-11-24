@@ -19,6 +19,7 @@
 #include "panel.h"
 #include "sensors.h"
 #include "domain-logic.h"
+#include "stats.h"
 
 struct cmdline_opt {
 	bool display_help;
@@ -45,6 +46,10 @@ static void signal_handler(int signo)
 
 	case SIGALRM:
 		thread_pool_add_request(frontend_thread, main_thread, NULL);
+		break;
+
+	case SIGUSR1:
+		stat_show();
 		break;
 	}
 }
@@ -76,6 +81,7 @@ static void initialize(void)
 	setsid();
 	install_sighandler(SIGTERM);
 	install_sighandler(SIGALRM);
+	install_sighandler(SIGUSR1);
 	panel = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
 	if (panel < 0)
 		exit(1);
@@ -245,8 +251,6 @@ int main(int argc, char *argv[])
 	/* hold main process */
 	while ( !daemon_terminate ) {
 		sleep(10);
-		printf(".");
-		fflush(stdout);
 	}
 	printf("Daemon exit. \n");
 

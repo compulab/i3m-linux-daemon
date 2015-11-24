@@ -13,6 +13,7 @@
 #include "panel.h"
 #include "registers.h"
 #include "i2c-tools.h"
+#include "stats.h"
 
 
 /* 
@@ -74,6 +75,9 @@ int panel_read_byte(unsigned regno)
 	if (value < 0) {
 		fprintf(stderr, "Could not read register %02x: %d \n", regno, value);
 	}
+	else {
+		stat_inc_i2c_read_count();
+	}
 
 	return value;
 }
@@ -94,6 +98,9 @@ int panel_write_byte(unsigned regno, int data)
 	err = i2c_smbus_write_byte_data(panel, regno, data);
 	if (err < 0) {
 		fprintf(stderr, "Could not write register %02x: %d \n", regno, err);
+	}
+	else {
+		stat_inc_i2c_write_count();
 	}
 
 	return err;
