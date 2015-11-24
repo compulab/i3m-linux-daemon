@@ -179,3 +179,8 @@ int panel_set_temperature(int cpu_id, int temp)
 	return err;
 }
 
+int panel_reset(void)
+{
+	return panel_write_byte(ATFP_REG_FPCTRL, ATFP_MASK_FPCTRL_RST);
+}
+

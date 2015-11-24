@@ -11,6 +11,7 @@
 #include "thread-pool.h"
 #include "panel.h"
 #include "sensors.h"
+#include "stats.h"
 
 /*
  * Getting and setting core temperature.
@@ -64,5 +65,21 @@ static void get_temperature(void *priv_context, void *shared_context)
 void panel_update_temperature(void)
 {
 	thread_pool_add_request(backend_thread, get_temperature, NULL);
+}
+
+
+/*
+ * Reset front panel controller along with daemon state.
+ */
+
+static void __atfp_reset(void *priv_context, void *shared_context)
+{
+	panel_reset();
+	stat_reset();
+}
+
+void atfp_reset(void)
+{
+	thread_pool_add_request(frontend_thread, __atfp_reset, NULL);
 }
 

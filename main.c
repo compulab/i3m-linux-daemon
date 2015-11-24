@@ -51,6 +51,10 @@ static void signal_handler(int signo)
 	case SIGUSR1:
 		stat_show();
 		break;
+
+	case SIGUSR2:
+		atfp_reset();
+		break;
 	}
 }
 
@@ -82,6 +86,7 @@ static void initialize(void)
 	install_sighandler(SIGTERM);
 	install_sighandler(SIGALRM);
 	install_sighandler(SIGUSR1);
+	install_sighandler(SIGUSR2);
 	panel = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
 	if (panel < 0)
 		exit(1);

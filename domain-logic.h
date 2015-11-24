@@ -8,6 +8,7 @@
 #define _DOMAIN_LOGIC
 
 void panel_update_temperature(void);
+void atfp_reset(void);
 
 #endif	/* _DOMAIN_LOGIC */
 
