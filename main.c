@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 
 	/* hold main process */
 	while ( !daemon_terminate ) {
-		sleep(10);
+		pause();
 	}
 	printf("Daemon exit. \n");
 
