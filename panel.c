@@ -28,15 +28,10 @@ static int panel = -1;
  * Notice, there is no limitation on number of simultaneously opened devices
  * belonging to the same i2c bus.
  */
-int panel_open_i2c_device(int i2c_bus, int i2c_addr)
+static int __panel_open_i2c_device(int i2c_bus, int i2c_addr)
 {
 	int i2c_devnum;
 	int err = 0;
-
-	if (panel >= 0) {
-		fprintf(stderr, "panel i2c device is already open \n");
-		return panel;
-	}
 
 	i2c_devnum = open_i2c_dev(i2c_bus);
 	if (i2c_devnum < 0) {
@@ -51,7 +46,6 @@ int panel_open_i2c_device(int i2c_bus, int i2c_addr)
 		goto i2c_out_err1;
 	}
 
-	panel = i2c_devnum;
 	return i2c_devnum;
 
 i2c_out_err1:
@@ -59,6 +53,22 @@ i2c_out_err1:
 
 i2c_out_err0:
 	return err;
+}
+
+int panel_open_i2c_device(int i2c_bus, int i2c_addr)
+{
+	int i2c_devnum;
+
+	if (panel >= 0) {
+		fprintf(stderr, "panel i2c device is already open \n");
+		return panel;
+	}
+
+	i2c_devnum = __panel_open_i2c_device(i2c_bus, i2c_addr);
+	if (i2c_devnum >= 0)
+		panel = i2c_devnum;
+
+	return i2c_devnum;
 }
 
 void panel_close(void)
@@ -118,7 +128,7 @@ int panel_lookup_i2c_bus(void)
 	adapters = gather_i2c_busses();
 	for (i = 0; adapters && adapters[i].name; ++i) {
 
-		fd = panel_open_i2c_device(adapters[i].nr, I2C_PANEL_INTERFACE_ADDR);
+		fd = __panel_open_i2c_device(adapters[i].nr, I2C_PANEL_INTERFACE_ADDR);
 		if (fd < 0)
 			continue;
 
