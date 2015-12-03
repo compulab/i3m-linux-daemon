@@ -4,7 +4,6 @@
  * License: GPL-2
  */
 
-#include <stdbool.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +29,6 @@ struct cmdline_opt {
 ThreadPool *frontend_thread;
 ThreadPool *backend_thread;
 
-static bool daemon_terminate = false;
 static struct cmdline_opt options;
 
 static void main_thread(void *priv_context, void *shared_context);
@@ -40,10 +38,6 @@ static void signal_handler(int signo)
 {
 	switch (signo)
 	{
-	case SIGTERM:
-		daemon_terminate = true;
-		break;
-
 	case SIGALRM:
 		thread_pool_add_request(frontend_thread, main_thread, NULL);
 		break;
@@ -74,6 +68,27 @@ static void install_sighandler(int signo)
 	}
 }
 
+enum {DTERM_INIT, DTERM_WAIT};
+
+static void daemon_termination(int phase)
+{
+	sigset_t signals;
+	int signo = 0;
+
+	sigemptyset(&signals);
+	sigaddset(&signals, SIGTERM);
+
+	switch (phase) {
+	case DTERM_INIT:
+		pthread_sigmask(SIG_BLOCK, &signals, NULL);
+		break;
+	case DTERM_WAIT:
+		while (signo != SIGTERM)
+			sigwait(&signals, &signo);
+		break;
+	}
+}
+
 static void initialize(void)
 {
 	int err;
@@ -83,10 +98,10 @@ static void initialize(void)
 		exit(0);
 
 	setsid();
-	install_sighandler(SIGTERM);
 	install_sighandler(SIGALRM);
 	install_sighandler(SIGUSR1);
 	install_sighandler(SIGUSR2);
+	daemon_termination(DTERM_INIT);
 	panel = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
 	if (panel < 0)
 		exit(1);
@@ -253,10 +268,7 @@ int main(int argc, char *argv[])
 
 	thread_pool_add_request(frontend_thread, main_thread, NULL);
 
-	/* hold main process */
-	while ( !daemon_terminate ) {
-		pause();
-	}
+	daemon_termination(DTERM_WAIT);
 	printf("Daemon exit. \n");
 
 	cleanup();
