@@ -189,6 +189,21 @@ int panel_set_temperature(int cpu_id, int temp)
 	return err;
 }
 
+int panel_set_frequency(int cpu_id, int freq)
+{
+	int err;
+	int freq_reg_lsb = ATFP_REG_CPU0F_LSB + (cpu_id * 2);
+	int freq_reg_msb = ATFP_REG_CPU0F_MSB + (cpu_id * 2);
+
+	/* assert((cpu_id >= 0) && (cpu_id <= 7)); */
+
+	err = panel_write_byte(freq_reg_lsb, (freq & 0xFF));
+	if ( !err )
+		err = panel_write_byte(freq_reg_msb, (0x80 | ((freq >> 8) & 0xFF)));
+
+	return err;
+}
+
 int panel_reset(void)
 {
 	return panel_write_byte(ATFP_REG_FPCTRL, ATFP_MASK_FPCTRL_RST);

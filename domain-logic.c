@@ -11,6 +11,7 @@
 #include "thread-pool.h"
 #include "panel.h"
 #include "sensors.h"
+#include "cpu-freq.h"
 #include "stats.h"
 
 /*
@@ -65,6 +66,48 @@ static void get_temperature(void *priv_context, void *shared_context)
 void panel_update_temperature(void)
 {
 	thread_pool_add_request(backend_thread, get_temperature, NULL);
+}
+
+
+/*
+ * Getting and setting core frequency.
+ */
+
+typedef struct {
+	int num_cores;
+	int freq[ATFP_MAX_CPU_CORES];
+} CpuFreq;
+
+static void set_frequency(void *priv_context, void *shared_context)
+{
+	CpuFreq *context = (CpuFreq *)priv_context;
+	int core_id;
+	int freq;
+	int err;
+
+	for (core_id = 0; core_id < context->num_cores; ++core_id) {
+		freq = context->freq[core_id];
+		err = panel_set_frequency(core_id, freq);
+		if ( err )
+			break;
+	}
+
+	free(context);
+}
+
+static void get_frequency(void *priv_context, void *shared_context)
+{
+	CpuFreq *context = (CpuFreq *)malloc(sizeof(CpuFreq));
+
+	context->num_cores = ATFP_MAX_CPU_CORES;
+
+	cpu_freq_get_list(&context->num_cores, context->freq);
+	thread_pool_add_request(frontend_thread, set_frequency, context);
+}
+
+void panel_update_frequency(void)
+{
+	thread_pool_add_request(backend_thread, get_frequency, NULL);
 }
 
 

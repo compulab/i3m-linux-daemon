@@ -146,7 +146,7 @@ static void main_thread(void *priv_context, void *shared_context)
 			break;
 
 		case ATFP_MASK_PENDR0_CPUFR:
-			UNSUPPORTED_REQ_MESSAGE(CPUFR);
+			panel_update_frequency();
 			break;
 
 		case ATFP_MASK_PENDR0_CPUTR:
