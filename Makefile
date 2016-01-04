@@ -11,9 +11,11 @@ OBJDIR  = obj
 BINDIR  = bin
 OUTFILE = $(BINDIR)/airtop-fpsvc
 
+NVMLDIR = nvml
+
 OBJS    = $(SOURCES:%.c=$(OBJDIR)/%.o)
-CFLAGS  = -Wall
-LFLAGS  = -Wall -lsensors -lpthread -lm -lpci
+CFLAGS  = -Wall -I$(NVMLDIR)
+LFLAGS  = -Wall -lsensors -lpthread -lm -lpci -lnvidia-ml -L$(NVMLDIR)
 COMPILE_CMD = gcc $(CFLAGS)
 STRIP_CMD   = strip
 LINK_CMD    = gcc $(LFLAGS)
