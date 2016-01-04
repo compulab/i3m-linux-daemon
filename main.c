@@ -19,10 +19,12 @@
 #include "sensors.h"
 #include "domain-logic.h"
 #include "stats.h"
+#include "pci-tools.h"
 
 struct cmdline_opt {
 	bool display_help;
 	bool list_temp_sensors;
+	bool list_video_driver;
 	int i2c_bus;
 };
 
@@ -177,6 +179,7 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 	const struct option long_options[] = {
 		{"help",		no_argument,		0,	'h'},
 		{"list-temp-sensors",	no_argument,		0,	't'},
+		{"list-video-driver",	no_argument,		0,	'v'},
 		{"i2c-bus",		required_argument,	0,	'b'},
 		{0,			0,			0,	0}
 	};
@@ -187,6 +190,7 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 	/* initialize default values */
 	opts->display_help = false;
 	opts->list_temp_sensors = false;
+	opts->list_video_driver = false;
 	opts->i2c_bus = -1;
 
 	/* parse command line options */
@@ -212,6 +216,9 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 		case 't':
 			opts->list_temp_sensors = true;
 			break;
+		case 'v':
+			opts->list_video_driver = true;
+			break;
 		case 'b':
 			opts->i2c_bus = strtol(optarg, NULL, 0);
 			break;
@@ -224,7 +231,8 @@ getopt_out_test_validity:
 		goto getopt_out_err;
 
 	/* test options validity */
-	if (opts->list_temp_sensors)
+	if (opts->list_temp_sensors ||
+	    opts->list_video_driver)
 		goto getopt_out_ok;
 
 	if (opts->i2c_bus == -1)
@@ -242,9 +250,11 @@ getopt_out_err:
 	fprintf(stderr, "Usage:\n" \
 			"%s --help\n" \
 			"%s --list-temp-sensors\n" \
+			"%s --list-video-driver\n" \
 			"%s [--i2c-bus=N]\n" \
 			"Where:\n" \
 			"--i2c-bus  is i2c bus number of the front panel\n",
+			basename(argv[0]),
 			basename(argv[0]),
 			basename(argv[0]),
 			basename(argv[0]));
@@ -259,8 +269,14 @@ int main(int argc, char *argv[])
 	if (err < 0)
 		return err;
 
-	if (options.list_temp_sensors) {
+	if (options.list_temp_sensors)
 		sensors_show(SENSORS_FEATURE_TEMP);
+
+	if (options.list_video_driver)
+		printf("Video driver: %s \n", get_vga_driver_name());
+
+	if (options.list_temp_sensors ||
+	    options.list_video_driver) {
 		return 0;
 	}
 

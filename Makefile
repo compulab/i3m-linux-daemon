@@ -5,7 +5,7 @@
 #
 
 SOURCES = main.c panel.c sensors.c queue.c thread-pool.c domain-logic.c \
-	i2c-tools.c stats.c cpu-freq.c
+	i2c-tools.c stats.c cpu-freq.c pci-tools.c
 
 OBJDIR  = obj
 BINDIR  = bin
@@ -13,7 +13,7 @@ OUTFILE = $(BINDIR)/airtop-fpsvc
 
 OBJS    = $(SOURCES:%.c=$(OBJDIR)/%.o)
 CFLAGS  = -Wall
-LFLAGS  = -Wall -lsensors -lpthread -lm
+LFLAGS  = -Wall -lsensors -lpthread -lm -lpci
 COMPILE_CMD = gcc $(CFLAGS)
 STRIP_CMD   = strip
 LINK_CMD    = gcc $(LFLAGS)
