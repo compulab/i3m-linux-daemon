@@ -100,6 +100,9 @@
 /* 
  * Bit flag offsets within the registers
  */
+#define ATFP_OFFS_SENSORT_GPUS		0
+#define ATFP_OFFS_SENSORT_AMBS		1
+
 #define ATFP_OFFS_PENDR0_HDDTR		0
 #define ATFP_OFFS_PENDR0_CPUFR		1
 #define ATFP_OFFS_PENDR0_CPUTR		2
@@ -108,6 +111,9 @@
 /* 
  * Bit flag masks within the registers
  */
+#define ATFP_MASK_SENSORT_GPUS		(1 << ATFP_OFFS_SENSORT_GPUS)
+#define ATFP_MASK_SENSORT_AMBS		(1 << ATFP_OFFS_SENSORT_AMBS)
+
 #define ATFP_MASK_PENDR0_HDDTR		(1 << ATFP_OFFS_PENDR0_HDDTR)
 #define ATFP_MASK_PENDR0_CPUFR		(1 << ATFP_OFFS_PENDR0_CPUFR)
 #define ATFP_MASK_PENDR0_CPUTR		(1 << ATFP_OFFS_PENDR0_CPUTR)

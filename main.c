@@ -156,7 +156,7 @@ static void main_thread(void *priv_context, void *shared_context)
 			break;
 
 		case ATFP_MASK_PENDR0_GPUTR:
-			UNSUPPORTED_REQ_MESSAGE(GPUTR);
+			panel_update_gpu_temp();
 			break;
 
 		default:

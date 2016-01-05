@@ -195,6 +195,17 @@ int panel_set_frequency(int cpu_id, int freq)
 	return err;
 }
 
+int panel_set_gpu_temp(int temp)
+{
+	int err;
+
+	err = panel_write_byte(ATFP_REG_GPUT, temp);
+	if ( !err )
+		err = panel_write_byte(ATFP_REG_SENSORT, ATFP_MASK_SENSORT_GPUS);
+
+	return err;
+}
+
 int panel_reset(void)
 {
 	return panel_write_byte(ATFP_REG_FPCTRL, ATFP_MASK_FPCTRL_RST);

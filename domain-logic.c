@@ -6,12 +6,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "thread-pool.h"
 #include "panel.h"
 #include "sensors.h"
 #include "cpu-freq.h"
+#include "pci-tools.h"
+#include "nvml-tools.h"
 #include "stats.h"
 
 /*
@@ -108,6 +111,45 @@ static void get_frequency(void *priv_context, void *shared_context)
 void panel_update_frequency(void)
 {
 	thread_pool_add_request(backend_thread, get_frequency, NULL);
+}
+
+
+/* 
+ * Getting and setting GPU temperature.
+ */
+
+static void set_gpu_temperature(void *priv_context, void *shared_context)
+{
+	unsigned int *temp = (unsigned int *)priv_context;
+
+	panel_set_gpu_temp(*temp);
+	free(temp);
+}
+
+static void get_gpu_temperature(void *priv_context, void *shared_context)
+{
+	char *name;
+	unsigned int temp;
+	unsigned int *context;
+
+	name = get_vga_driver_name();
+	if (name && !strcmp("nvidia", name)) {
+		/* nvidia proprietary driver */
+		nvml_gpu_temp_read(&temp);
+	}
+	else {
+		/* non-identified GPU - ignore it */
+		return;
+	}
+
+	context = (unsigned int *)malloc(sizeof(unsigned int));
+	*context = temp;
+	thread_pool_add_request(frontend_thread, set_gpu_temperature, context);
+}
+
+void panel_update_gpu_temp(void)
+{
+	thread_pool_add_request(backend_thread, get_gpu_temperature, NULL);
 }
 
 
