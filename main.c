@@ -111,6 +111,8 @@ static void initialize(void)
 	if ( err )
 		exit(1);
 
+	sensors_nouveau_init();
+
 	frontend_thread = thread_pool_create(1, ATFP_FRONTEND_QUEUE_LEN, NULL);
 	backend_thread = thread_pool_create(ATFP_BACKEND_THREAD_NUM, ATFP_BACKEND_QUEUE_LEN, NULL);
 }

@@ -120,8 +120,9 @@ void panel_update_frequency(void)
 
 static void set_gpu_temperature(void *priv_context, void *shared_context)
 {
-	unsigned int *temp = (unsigned int *)priv_context;
+	int *temp = (int *)priv_context;
 
+	printf("GPUTR: %d [deg] \n", *temp);
 	panel_set_gpu_temp(*temp);
 	free(temp);
 }
@@ -129,14 +130,18 @@ static void set_gpu_temperature(void *priv_context, void *shared_context)
 static void get_gpu_temperature(void *priv_context, void *shared_context)
 {
 	char *name;
-	unsigned int temp;
-	unsigned int *context;
+	int temp;
+	int *context;
 	int err;
 
 	name = get_vga_driver_name();
 	if (name && !strcmp("nvidia", name)) {
 		/* nvidia proprietary driver */
-		err = nvml_gpu_temp_read(&temp);
+		err = nvml_gpu_temp_read((unsigned int *)&temp);
+	}
+	else if (name && !strcmp("nouveau", name)) {
+		/* nouveau open source driver */
+		err = sensors_nouveau_read(&temp);
 	}
 	else {
 		/* non-identified GPU - ignore it */
@@ -148,7 +153,7 @@ static void get_gpu_temperature(void *priv_context, void *shared_context)
 		return;
 	}
 
-	context = (unsigned int *)malloc(sizeof(unsigned int));
+	context = (int *)malloc(sizeof(int));
 	*context = temp;
 	thread_pool_add_request(frontend_thread, set_gpu_temperature, context);
 }

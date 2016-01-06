@@ -11,5 +11,8 @@ int sensors_show(int sens_feature_type);
 int sensors_coretemp_init(void);
 int sensors_coretemp_read(int *core_id, int *temp);
 
+int sensors_nouveau_init(void);
+int sensors_nouveau_read(int *temp);
+
 #endif	/* _SENSORS_H */
 
