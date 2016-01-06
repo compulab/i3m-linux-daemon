@@ -131,14 +131,20 @@ static void get_gpu_temperature(void *priv_context, void *shared_context)
 	char *name;
 	unsigned int temp;
 	unsigned int *context;
+	int err;
 
 	name = get_vga_driver_name();
 	if (name && !strcmp("nvidia", name)) {
 		/* nvidia proprietary driver */
-		nvml_gpu_temp_read(&temp);
+		err = nvml_gpu_temp_read(&temp);
 	}
 	else {
 		/* non-identified GPU - ignore it */
+		err = -1;
+	}
+
+	if (err) {
+		fprintf(stderr, "%s: abort request \n", __FUNCTION__);
 		return;
 	}
 

@@ -15,7 +15,7 @@ NVMLDIR = nvml
 
 OBJS    = $(SOURCES:%.c=$(OBJDIR)/%.o)
 CFLAGS  = -Wall -I$(NVMLDIR)
-LFLAGS  = -Wall -lsensors -lpthread -lm -lpci -lnvidia-ml -L$(NVMLDIR)
+LFLAGS  = -Wall -lsensors -lpthread -lm -lpci -ldl -rdynamic
 COMPILE_CMD = gcc $(CFLAGS)
 STRIP_CMD   = strip
 LINK_CMD    = gcc $(LFLAGS)
