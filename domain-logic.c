@@ -143,6 +143,24 @@ static void get_gpu_temperature(void *priv_context, void *shared_context)
 		/* nouveau open source driver */
 		err = sensors_nouveau_read(&temp);
 	}
+	else if (name && !strcmp("i915", name)) {
+		/* i915 open source driver
+		 * Intel's integrated GPU seemingly does not report temperature,
+		 * however, being integrated on the chip allows us to evaluate
+		 * its temperature as comparable to CPU core temperature.
+		 */
+		int core_id;
+		int temp0;
+
+		temp = 0;
+		for (core_id = 0; core_id >= 0;) {
+			err = sensors_coretemp_read(&core_id, &temp0);
+			if ( err )
+				break;
+			if (temp0 > temp)
+				temp = temp0;
+		}
+	}
 	else {
 		/* non-identified GPU - ignore it */
 		err = -1;
