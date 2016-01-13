@@ -19,6 +19,7 @@ extern ThreadPool *backend_thread;
 #define ATFP_BACKEND_THREAD_NUM		8
 #define ATFP_BACKEND_QUEUE_LEN		16
 
+#define ATFP_MAIN_STARTUP_DELAY		2
 #define ATFP_MAIN_POLL_CYCLE		2
 
 

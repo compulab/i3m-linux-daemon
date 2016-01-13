@@ -102,6 +102,10 @@ static void initialize(void)
 	panel = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
 	if (panel < 0)
 		exit(1);
+	err = panel_reset();
+	if ( err )
+		exit(1);
+
 	err = sensors_coretemp_init();
 	if ( err )
 		exit(1);
@@ -278,9 +282,11 @@ int main(int argc, char *argv[])
 	}
 
 	initialize();
-
-	thread_pool_add_request(frontend_thread, main_thread, NULL);
-
+	/*
+	 * Main FP communication routine is armed
+	 * upon SIGALRM reception.
+	 */
+	alarm(ATFP_MAIN_STARTUP_DELAY);
 	daemon_termination(DTERM_WAIT);
 	printf("Daemon exit. \n");
 
