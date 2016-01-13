@@ -10,7 +10,6 @@
 void panel_update_temperature(void);
 void panel_update_frequency(void);
 void panel_update_gpu_temp(void);
-void atfp_reset(void);
 
 #endif	/* _DOMAIN_LOGIC */
 
