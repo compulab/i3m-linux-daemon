@@ -11,6 +11,7 @@ void stat_reset(void);
 void stat_show(void);
 void stat_inc_i2c_write_count(void);
 void stat_inc_i2c_read_count(void);
+void stat_inc_watchdog_list_length(void);
 
 #endif	/* _STATS_H */
 

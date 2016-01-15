@@ -5,7 +5,8 @@
 #
 
 SOURCES = main.c panel.c sensors.c queue.c thread-pool.c domain-logic.c \
-	i2c-tools.c stats.c cpu-freq.c pci-tools.c nvml-tools.c
+	i2c-tools.c stats.c cpu-freq.c pci-tools.c nvml-tools.c \
+	dlist.c watchdog.c
 
 OBJDIR  = obj
 BINDIR  = bin

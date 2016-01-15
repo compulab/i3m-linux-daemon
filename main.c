@@ -47,6 +47,10 @@ static void signal_handler(int signo)
 	case SIGUSR1:
 		stat_show();
 		break;
+
+	case SIGUSR2:
+		/* nothing - interrupt sleep */
+		break;
 	}
 }
 
@@ -98,6 +102,7 @@ static void initialize(void)
 	setsid();
 	install_sighandler(SIGALRM);
 	install_sighandler(SIGUSR1);
+	install_sighandler(SIGUSR2);
 	daemon_termination(DTERM_INIT);
 	panel = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
 	if (panel < 0)
