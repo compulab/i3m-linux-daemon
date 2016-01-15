@@ -22,6 +22,8 @@ extern ThreadPool *backend_thread;
 #define ATFP_MAIN_STARTUP_DELAY		2
 #define ATFP_MAIN_POLL_CYCLE		2
 
+#define ATFP_WATCHDOG_DEFAULT_DELAY	5
+
 
 #endif	/* _COMMON_H */
 

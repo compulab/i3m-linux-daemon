@@ -12,12 +12,45 @@
 #include <unistd.h>
 
 #include "thread-pool.h"
+#include "watchdog.h"
+#include "common.h"
 
 
 typedef struct {
 	ThreadPoolWork func;
 	void *context;
+	WDeadline *deadline;
 } ThreadPoolRequest;
+
+
+static Watchdog *thread_pool_watchdog = NULL;
+static int watchdog_refcount = 0;
+
+
+/*
+ * thread_pool_watchdog singleton object
+ *
+ * thread_pool_watchdog_{init | cleanup} functions
+ * are assumed to run sequentially, thus not mutual
+ * exclusion required.
+ */
+static void thread_pool_watchdog_init(void)
+{
+	if (watchdog_refcount == 0)
+		thread_pool_watchdog = watchdog_create();
+	++watchdog_refcount;
+}
+
+static void thread_pool_watchdog_cleanup(void)
+{
+	if (watchdog_refcount <= 0)
+		return;
+
+	if (--watchdog_refcount == 0) {
+		watchdog_destroy(thread_pool_watchdog);
+		thread_pool_watchdog = NULL;
+	}
+}
 
 
 static void thread_pool_runner_cleanup(void *arg)
@@ -51,6 +84,8 @@ static void *thread_pool_runner(void *arg)
 		pthread_cleanup_pop(true);
 
 		req.func(req.context, p->shared_context);
+		if (req.deadline != NULL)
+			watchdog_clear_deadline(thread_pool_watchdog, req.deadline);
 	}
 
 	return NULL;
@@ -91,6 +126,8 @@ ThreadPool *thread_pool_create(int thread_count, int queue_size, void *shared_co
 		p->thread_count++;
 	}
 
+	thread_pool_watchdog_init();
+
 	return p;
 }
 
@@ -120,6 +157,8 @@ void thread_pool_destroy(ThreadPool *p)
 	/* zero everything against evil eye */
 	memset(p, 0, sizeof(ThreadPool));
 	free(p);
+
+	thread_pool_watchdog_cleanup();
 }
 
 void thread_pool_add_request(ThreadPool *p, ThreadPoolWork func, void *context)
@@ -127,6 +166,7 @@ void thread_pool_add_request(ThreadPool *p, ThreadPoolWork func, void *context)
 	ThreadPoolRequest req = {
 		.func = func,
 		.context = context,
+		.deadline = watchdog_submit_deadline(thread_pool_watchdog, ATFP_WATCHDOG_DEFAULT_DELAY),
 	};
 
 	pthread_mutex_lock(&p->lock);
