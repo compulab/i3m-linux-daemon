@@ -7,9 +7,16 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <libgen.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <syslog.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/file.h>
 #include <sensors/sensors.h>
 
 #include "common.h"
@@ -26,6 +33,7 @@ struct cmdline_opt {
 	bool list_temp_sensors;
 	bool list_video_driver;
 	int i2c_bus;
+	int loglevel;
 };
 
 ThreadPool *frontend_thread;
@@ -91,15 +99,49 @@ static void daemon_termination(int phase)
 	}
 }
 
+static void daemonize(void)
+{
+	int fd;
+	int err;
+	const int loglevels[] = {LOG_DEBUG, LOG_INFO, LOG_NOTICE};
+
+	/*
+	 * assert a single instance of the daemon
+	 */
+	fd = open(ATFP_DAEMON_LOCKFILE, O_CREAT, 0);
+	if (fd < 0) {
+		fprintf(stderr, "Could not open lock file: %d. \n", errno);
+		exit(1);
+	}
+	err = flock(fd, (LOCK_EX | LOCK_NB));
+	if (err < 0) {
+		if (errno == EWOULDBLOCK)
+			fprintf(stderr, "An instance of the daemon already runs. \n");
+		else
+			fprintf(stderr, "Could not acquire lock file: %d. \n", errno);
+		exit(1);
+	}
+
+	/*
+	 * fork background daemon
+	 */
+	daemon(0, 0);
+	umask(0022);
+
+	/*
+	 * set up logging
+	 */
+	openlog(ATFP_SYSLOG_IDENT, LOG_PID, LOG_USER);
+	atexit(closelog);
+	setlogmask(LOG_UPTO( loglevels[options.loglevel] ));
+	syslog(LOG_NOTICE, "AirTop Front-Panel Service -- start");
+}
+
 static void initialize(void)
 {
 	int err;
 	int panel;
 
-	if (fork() != 0)
-		exit(0);
-
-	setsid();
 	install_sighandler(SIGALRM);
 	install_sighandler(SIGUSR1);
 	install_sighandler(SIGUSR2);
@@ -187,17 +229,21 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 		{"list-temp-sensors",	no_argument,		0,	't'},
 		{"list-video-driver",	no_argument,		0,	'v'},
 		{"i2c-bus",		required_argument,	0,	'b'},
+		{"loglevel",      	required_argument,	0,	'l'},
 		{0,			0,			0,	0}
 	};
 
 	int c;
 	int option_index = 0;
+	const char *loglevels[] = {"debug", "info", "notice", NULL};
+	int i;
 
 	/* initialize default values */
 	opts->display_help = false;
 	opts->list_temp_sensors = false;
 	opts->list_video_driver = false;
 	opts->i2c_bus = -1;
+	opts->loglevel = 2;	/* 'notice' */
 
 	/* parse command line options */
 	while (true) {
@@ -228,6 +274,16 @@ static int fpsvc_parse_cmdline_opts(int argc, char *argv[], struct cmdline_opt *
 		case 'b':
 			opts->i2c_bus = strtol(optarg, NULL, 0);
 			break;
+		case 'l':
+			i = 0;
+			while (loglevels[i] != NULL) {
+				if ( !strcmp(loglevels[i], optarg) ) {
+					opts->loglevel = i;
+					break;
+				}
+				++i;
+			}
+			break;
 		}
 	}
 
@@ -257,7 +313,7 @@ getopt_out_err:
 			"%s --help\n" \
 			"%s --list-temp-sensors\n" \
 			"%s --list-video-driver\n" \
-			"%s [--i2c-bus=N]\n" \
+			"%s [--i2c-bus=N] [--loglevel=<notice|info|debug>]\n" \
 			"Where:\n" \
 			"--i2c-bus  is i2c bus number of the front panel\n",
 			basename(argv[0]),
@@ -286,6 +342,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+	daemonize();
 	initialize();
 	/*
 	 * Main FP communication routine is armed
