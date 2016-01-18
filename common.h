@@ -7,10 +7,20 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include <syslog.h>
+
 #include "thread-pool.h"
 
 extern ThreadPool *frontend_thread;
 extern ThreadPool *backend_thread;
+
+
+#define sloge(...)			syslog(LOG_ERR,     __VA_ARGS__)
+#define slogw(...)			syslog(LOG_WARNING, __VA_ARGS__)
+#define slogn(...)			syslog(LOG_NOTICE,  __VA_ARGS__)
+#define slogi(...)			syslog(LOG_INFO,    __VA_ARGS__)
+#define slogd(...)			syslog(LOG_DEBUG,   __VA_ARGS__)
+
 
 #define ATFP_DAEMON_LOCKFILE		"/tmp/airtop-fpsvc.lock"
 #define ATFP_SYSLOG_IDENT		"at-fpsvc"

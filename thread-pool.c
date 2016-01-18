@@ -99,7 +99,7 @@ ThreadPool *thread_pool_create(int thread_count, int queue_size, void *shared_co
 
 	p = (ThreadPool *)malloc(sizeof(ThreadPool) + (sizeof(pthread_t) * thread_count));
 	if ( !p ) {
-		fprintf(stderr, "Could not allocate thread pool \n");
+		sloge("thread-pool: could not allocate memory");
 		return NULL;
 	}
 
@@ -119,7 +119,7 @@ ThreadPool *thread_pool_create(int thread_count, int queue_size, void *shared_co
 	for (i = 0; i < thread_count; ++i) {
 		err = pthread_create(&p->thread_pool[i], NULL, thread_pool_runner, p);
 		if ( err ) {
-			fprintf(stderr, "Could not spawn a thread: %d \n", err);
+			sloge("thread-pool: could not spawn a thread: %d", err);
 			break;
 		}
 
@@ -182,6 +182,7 @@ void thread_pool_add_request(ThreadPool *p, ThreadPoolWork func, void *context)
 }
 
 
+/* unittest */
 int thread_pool_test(void)
 {
 	typedef struct {

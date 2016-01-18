@@ -34,7 +34,7 @@ static void set_temperature(void *priv_context, void *shared_context)
 
 	for (core_id = 0; core_id < context->num_sensors; ++core_id) {
 		temp = context->temp[core_id];
-		printf("CPUTR: Core %d: %d [deg] \n", core_id, temp);
+		slogd("CPUTR: Core %d: %d [degC]", core_id, temp);
 		err = panel_set_temperature(core_id, temp);
 		if ( err )
 			break;
@@ -89,6 +89,7 @@ static void set_frequency(void *priv_context, void *shared_context)
 
 	for (core_id = 0; core_id < context->num_cores; ++core_id) {
 		freq = context->freq[core_id];
+		slogd("CPUFR: %d [MHz]", freq);
 		err = panel_set_frequency(core_id, freq);
 		if ( err )
 			break;
@@ -121,7 +122,7 @@ static void set_gpu_temperature(void *priv_context, void *shared_context)
 {
 	int *temp = (int *)priv_context;
 
-	printf("GPUTR: %d [deg] \n", *temp);
+	slogd("GPUTR: %d [degC]", *temp);
 	panel_set_gpu_temp(*temp);
 	free(temp);
 }
@@ -166,7 +167,7 @@ static void get_gpu_temperature(void *priv_context, void *shared_context)
 	}
 
 	if (err) {
-		fprintf(stderr, "%s: abort request \n", __FUNCTION__);
+		slogw("GPU Temp: abort request");
 		return;
 	}
 

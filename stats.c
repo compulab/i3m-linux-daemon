@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "common.h"
+
 
 typedef struct {
 	unsigned int show_counter;
@@ -27,10 +29,10 @@ void stat_reset(void)
 void stat_show(void)
 {
 	atfp_stat.show_counter++;
-	printf("ATFP Statistics: %d \n", atfp_stat.show_counter);
-	printf("i2c write transactions: %ld \n", atfp_stat.i2c_trans_write);
-	printf("i2c read transactions:  %ld \n", atfp_stat.i2c_trans_read);
-	printf("watchdog list length: %ld \n", atfp_stat.watchdog_list_length);
+	slogn("ATFP Statistics: %d", atfp_stat.show_counter);
+	slogn("i2c write transactions: %ld", atfp_stat.i2c_trans_write);
+	slogn("i2c read transactions:  %ld", atfp_stat.i2c_trans_read);
+	slogn("watchdog list length: %ld", atfp_stat.watchdog_list_length);
 }
 
 void stat_inc_i2c_write_count(void)

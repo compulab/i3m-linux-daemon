@@ -87,7 +87,7 @@ void cpu_freq_get_list(int *num_cores, int *freq_list)
 
 	cpuinfo = fopen(PATH_PROC_CPUINFO, "r");
 	if ( !cpuinfo ) {
-		fprintf(stderr, "Could not open %s \n", PATH_PROC_CPUINFO);
+		sloge("CPU Freq: could not open %s", PATH_PROC_CPUINFO);
 		return;
 	}
 

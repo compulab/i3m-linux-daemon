@@ -14,6 +14,7 @@
 #include "registers.h"
 #include "i2c-tools.h"
 #include "stats.h"
+#include "common.h"
 
 
 /* 
@@ -35,14 +36,14 @@ static int __panel_open_i2c_device(int i2c_bus, int i2c_addr)
 
 	i2c_devnum = open_i2c_dev(i2c_bus);
 	if (i2c_devnum < 0) {
-		fprintf(stderr, "i2c-%d: could not open: %d \n", i2c_bus, i2c_devnum);
+		sloge("i2c-%d: could not open: %d", i2c_bus, i2c_devnum);
 		err = i2c_devnum;
 		goto i2c_out_err0;
 	}
 
 	err = set_slave_addr(i2c_devnum, i2c_addr);
 	if (err < 0) {
-		fprintf(stderr, "i2c-%d:%02x could not set i2c slave: %d \n", i2c_bus, i2c_addr, err);
+		sloge("i2c-%d:%02x could not set i2c slave: %d", i2c_bus, i2c_addr, err);
 		goto i2c_out_err1;
 	}
 
@@ -60,7 +61,7 @@ int panel_open_i2c_device(int i2c_bus, int i2c_addr)
 	int i2c_devnum;
 
 	if (panel >= 0) {
-		fprintf(stderr, "panel i2c device is already open \n");
+		sloge("panel i2c device is already open");
 		return panel;
 	}
 
@@ -83,7 +84,7 @@ int panel_read_byte(unsigned regno)
 
 	value = i2c_smbus_read_byte_data(panel, regno);
 	if (value < 0) {
-		fprintf(stderr, "Could not read register %02x: %d \n", regno, value);
+		sloge("Could not read register %02x: %d", regno, value);
 	}
 	else {
 		stat_inc_i2c_read_count();
@@ -98,7 +99,7 @@ int panel_write_byte(unsigned regno, int data)
 
 	err = i2c_smbus_write_byte_data(panel, regno, data);
 	if (err < 0) {
-		fprintf(stderr, "Could not write register %02x: %d \n", regno, err);
+		sloge("Could not write register %02x: %d", regno, err);
 	}
 	else {
 		stat_inc_i2c_write_count();

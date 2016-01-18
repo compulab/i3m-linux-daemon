@@ -19,6 +19,7 @@
 #include <linux/i2c-dev.h>
 
 #include "i2c-tools.h"
+#include "common.h"
 
 
 #define BUNCH				8
@@ -213,7 +214,7 @@ found:
 			px = fgets(s, 120, f);
 			fclose(f);
 			if (!px) {
-				fprintf(stderr, "%s: read error\n", n);
+				sloge("%s: read error\n", n);
 				continue;
 			}
 			if ((px = strchr(s, '\n')) != NULL)

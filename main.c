@@ -73,7 +73,7 @@ static void install_sighandler(int signo)
 
 	err = sigaction(signo, &sig, NULL);
 	if (err) {
-		fprintf(stderr, "Signal %d: could not install signal handler: %d \n", signo, err);
+		sloge("Signal %d: could not install handler: %d", signo, err);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -134,7 +134,7 @@ static void daemonize(void)
 	openlog(ATFP_SYSLOG_IDENT, LOG_PID, LOG_USER);
 	atexit(closelog);
 	setlogmask(LOG_UPTO( loglevels[options.loglevel] ));
-	syslog(LOG_NOTICE, "AirTop Front-Panel Service -- start");
+	slogn("AirTop Front-Panel Service -- start");
 }
 
 static void initialize(void)
@@ -173,7 +173,7 @@ static void cleanup(void)
 	sensors_cleanup();
 }
 
-#define UNSUPPORTED_REQ_MESSAGE(r)	do { fprintf(stderr, "%s: "#r" request is not supported \n", __FUNCTION__); } while (0)
+#define UNSUPPORTED_REQ_MESSAGE(r)	do { slogw("%s: "#r" request is not supported", __FUNCTION__); } while (0)
 
 static void main_thread(void *priv_context, void *shared_context)
 {
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
 	 */
 	alarm(ATFP_MAIN_STARTUP_DELAY);
 	daemon_termination(DTERM_WAIT);
-	printf("Daemon exit. \n");
+	slogn("AirTop Front-Panel Service -- stop");
 
 	cleanup();
 	return 0;

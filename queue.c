@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "queue.h"
+#include "common.h"
 
 
 Queue *queue_create(size_t elemsize, int length)
@@ -18,7 +19,7 @@ Queue *queue_create(size_t elemsize, int length)
 
 	q = (Queue *)malloc(sizeof(Queue) + (elemsize * length));
 	if ( !q ) {
-		fprintf(stderr, "Could not allocate queue \n");
+		sloge("Could not allocate queue");
 		return NULL;
 	}
 

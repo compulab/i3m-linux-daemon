@@ -22,6 +22,7 @@
 
 #include "watchdog.h"
 #include "stats.h"
+#include "common.h"
 
 
 /* the earliest deadline at head */
@@ -69,7 +70,7 @@ static void *watchdog_runner(void *arg)
 
 		if (delta >= 0.0) {
 			/* timeout */
-			printf("watchdog: timeout exceeded - shutdown daemon. \n");
+			sloge("watchdog: timeout exceeded - shutdown daemon");
 			kill(0, SIGTERM);
 			break;
 		}

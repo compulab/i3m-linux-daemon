@@ -10,6 +10,8 @@
 #include <dlfcn.h>
 #include <nvml.h>
 
+#include "common.h"
+
 
 
 /*
@@ -50,7 +52,7 @@ static NvmlHandle *nvml_dll_load(void)
 
 	dll = dlopen(NVML_DLL_FILE, RTLD_NOW);
 	if ( !dll ) {
-		fprintf(stderr, "%s \n", dlerror());
+		dlerrstr = dlerror();
 		goto dll_out_err0;
 	}
 
@@ -66,11 +68,11 @@ static NvmlHandle *nvml_dll_load(void)
 	return dllh;
 
 dll_out_err1:
-	fprintf(stderr, "%s \n", dlerrstr);
 	free(dllh);
 	dlclose(dll);
 
 dll_out_err0:
+	sloge("%s", dlerrstr);
 	return NULL;
 }
 
@@ -114,23 +116,23 @@ static int nvml_init(void)
 
 	err = nvml_hdl->nvmlInit();
 	if (err != NVML_SUCCESS) {
-		fprintf(stderr, "nvml: could not initialize NVML: %d \n", err);
+		sloge("nvml: could not initialize NVML: %d", err);
 		goto nvml_out_err0;
 	}
 
 	err = nvml_hdl->nvmlDeviceGetCount(&count);
 	if (err != NVML_SUCCESS) {
-		fprintf(stderr, "nvml: could not get device count: %d \n", err);
+		sloge("nvml: could not get device count: %d", err);
 		goto nvml_out_err1;
 	}
 
 	if (count == 0) {
-		fprintf(stderr, "nvml: no GPU card present \n");
+		sloge("nvml: no GPU card present");
 		err = NVML_ERROR_NOT_FOUND;
 		goto nvml_out_err1;
 	}
 	else if (count > 1) {
-		fprintf(stderr, "nvml: %d GPU cards present. However, only one will be monitored. \n", count);
+		slogw("nvml: %d GPU cards present, however, only one will be monitored", count);
 	}
 
 	atexit(nvml_cleanup);
@@ -157,13 +159,13 @@ int nvml_gpu_temp_read(unsigned int *temp)
 	nvml_is_initialized = true;
 	err = nvml_hdl->nvmlDeviceGetHandleByIndex(NVML_DEVICE_DEFAULT_INDEX, &device);
 	if (err != NVML_SUCCESS) {
-		fprintf(stderr, "nvml: could not get device handle: %d \n", err);
+		sloge("nvml: could not get device handle: %d", err);
 		return err;
 	}
 
 	err = nvml_hdl->nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU/*no other options*/, temp);
 	if (err != NVML_SUCCESS) {
-		fprintf(stderr, "nvml: could not get device temperature: %d \n", err);
+		sloge("nvml: could not get device temperature: %d", err);
 	}
 
 	return err;

@@ -13,6 +13,8 @@
 
 #include <sensors/sensors.h>
 
+#include "common.h"
+
 #define SENSORS_CONFIG_FILE		NULL
 #define CORETEMP_SUBFEATURE_MAX		8
 
@@ -32,6 +34,13 @@ struct sensors_info {
 
 static struct sensors_info sensors = {0};
 
+/*
+ * Show all the available sensors of a particular type.
+ * Args:
+ * sens_feature_type - sensor type, e.g. SENSORS_FEATURE_TEMP
+ * Notice:
+ * This function sends output to the console, rather than syslem log.
+ */
 int sensors_show(int sens_feature_type)
 {
 	int err;
@@ -95,7 +104,7 @@ int sensors_coretemp_init(void)
 	if ( !sensors.init_done ) {
 		err = sensors_init(SENSORS_CONFIG_FILE);
 		if ( err ) {
-			fprintf(stderr, "Could not initialize lm-sensors: %d \n", err);
+			sloge("Could not initialize lm-sensors: %d", err);
 			return err;
 		}
 
@@ -106,7 +115,7 @@ int sensors_coretemp_init(void)
 	chipno = 0;
 	chipname = sensors_get_detected_chips(&chipmatch, &chipno);
 	if ( !chipname ) {
-		fprintf(stderr, "coretemp: could not detect sensor chip \n");
+		sloge("coretemp: could not detect sensor chip");
 		return -ENODEV;
 	}
 
@@ -127,7 +136,7 @@ int sensors_coretemp_init(void)
 
 		subfeature = sensors_get_subfeature(&chipmatch, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
 		if ( !subfeature ) {
-			fprintf(stderr, "coretemp: could not get subfeature \n");
+			sloge("coretemp: could not get subfeature");
 			err = -ENODEV;
 			goto out_err;
 		}
@@ -152,7 +161,7 @@ int sensors_coretemp_read(int *core_id, int *temp)
 	/* assert((*core_id >= 0) && (*core_id < sensors.coretemp_subfeature_num)); */
 	err = sensors_get_value(sensors.coretemp_chipname, sensors.coretemp_subfeature_ids[ *core_id ], &temp0);
 	if ( err ) {
-		fprintf(stderr, "coretemp: Core %d: could not get temperature value: %d \n", *core_id, err);
+		sloge("coretemp: Core %d: could not get temperature value: %d", *core_id, err);
 		goto out_err;
 	}
 
@@ -210,7 +219,7 @@ int sensors_nouveau_init(void)
 
 		subfeature = sensors_get_subfeature(&chipmatch, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
 		if ( !subfeature ) {
-			fprintf(stderr, "nouveau: could not get subfeature \n");
+			sloge("nouveau: could not get subfeature");
 			err = -ENODEV;
 			goto out_err;
 		}
@@ -238,7 +247,7 @@ int sensors_nouveau_read(int *temp)
 
 	err = sensors_get_value(sensors.nouveau_chipname, sensors.nouveau_subfeature_id, &temp0);
 	if ( err ) {
-		fprintf(stderr, "nouveau: could not get temperature value: %d \n", err);
+		sloge("nouveau: could not get temperature value: %d", err);
 		goto out_err;
 	}
 
