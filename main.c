@@ -174,6 +174,9 @@ static void main_thread(void *priv_context, void *shared_context)
 
 	request_bitmap = panel_get_pending_requests();
 
+	/* (optionally) disable particular functions */
+	request_bitmap &= ~options.disable;
+
 	/* dispatch each request */
 	for (i = 0; i < (sizeof(request_bitmap) * 8); ++i) {
 		request = request_bitmap & (1L << i);
