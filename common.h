@@ -24,6 +24,7 @@ extern ThreadPool *backend_thread;
 
 #define ATFP_DAEMON_LOCKFILE		"/tmp/airtop-fpsvc.lock"
 #define ATFP_SYSLOG_IDENT		"at-fpsvc"
+#define ATFP_DAEMON_CONFIGFILE		"/etc/airtop-fpsvc.conf"
 
 /* maximum number of CPU cores */
 #define ATFP_MAX_CPU_CORES		8
