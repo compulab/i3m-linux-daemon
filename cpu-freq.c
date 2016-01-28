@@ -4,6 +4,7 @@
  * License: GPL-2
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +20,12 @@
 enum {
 	CPUINFO_INIT,
 	CPUINFO_PROCESSOR_BLOCK,
+};
+
+enum {
+	PROCBLOCK_CORE_ID	= 0x01,
+	PROCBLOCK_CPU_MHZ	= 0x02,
+	PROCBLOCK_ALL		= 0x03
 };
 
 
@@ -39,6 +46,8 @@ static void parse_cpuinfo(FILE *cpuinfo, int *num_cores, int *freq_table)
 	int core_id;
 	float cpu_freq;
 	int real_num_cores;
+	int missing_data_bits;
+	bool data_valid;
 
 	memset(freq_table, 0, *num_cores);
 	real_num_cores = 0;
@@ -47,18 +56,22 @@ static void parse_cpuinfo(FILE *cpuinfo, int *num_cores, int *freq_table)
 		line = fgets(buff, sizeof(buff), cpuinfo);
 		switch (state) {
 		case CPUINFO_INIT:
-			if (starts_with("processor", line))
+			if (starts_with("processor", line)) {
+				missing_data_bits = PROCBLOCK_ALL;
 				state = CPUINFO_PROCESSOR_BLOCK;
+			}
 			break;
 
 		case CPUINFO_PROCESSOR_BLOCK:
 			if (starts_with("core id", line)) {
 				sscanf(line, "core id : %d", &core_id);
+				missing_data_bits &= ~PROCBLOCK_CORE_ID;
 				break;
 			}
 
 			if (starts_with("cpu MHz", line)) {
 				sscanf(line, "cpu MHz : %f", &cpu_freq);
+				missing_data_bits &= ~PROCBLOCK_CPU_MHZ;
 				break;
 			}
 
@@ -67,7 +80,10 @@ static void parse_cpuinfo(FILE *cpuinfo, int *num_cores, int *freq_table)
 			 * new block beginning or end of file.
 			 */
 			if (starts_with("processor", line) || feof(cpuinfo)) {
-				if ((core_id < *num_cores) && (freq_table[core_id] == 0)) {
+				data_valid = !missing_data_bits;
+				missing_data_bits = PROCBLOCK_ALL;
+
+				if (data_valid && (core_id < *num_cores) && (freq_table[core_id] == 0)) {
 					freq_table[core_id] = (int)roundf(cpu_freq);
 					++real_num_cores;
 				}
