@@ -55,6 +55,7 @@ static int options_parse_cmdline(Options *opts, int argc, char *argv[])
 		{"help",		no_argument,		0,	'h'},
 		{"info",		no_argument,		0,	'i'},
 		{"i2c-bus",		required_argument,	0,	'b'},
+		{"poll-cycle",		required_argument,	0,	'p'},
 		{"loglevel",      	required_argument,	0,	'l'},
 		{"configfile",          required_argument,	0,	'f'},
 		{0,			0,			0,	0}
@@ -88,6 +89,10 @@ static int options_parse_cmdline(Options *opts, int argc, char *argv[])
 		case 'b':
 			opts->i2c_bus = strtol(optarg, NULL, 0);
 			opts->i2c_bus_set = true;
+			break;
+		case 'p':
+			opts->poll_cycle = strtol(optarg, NULL, 0);
+			opts->poll_cycle_set = true;
 			break;
 		case 'l':
 			opts->loglevel_set = loglevel_conv_string_to_int(optarg, &opts->loglevel);
@@ -134,6 +139,12 @@ static int options_parse_configfile(Options *opts, const char *filename)
 				opts->i2c_bus_set = true;
 			}
 		}
+		else if (starts_with("poll-cycle=", line, k)) {
+			if (!opts->poll_cycle_set) {
+				opts->poll_cycle = strtol(&line[k], NULL, 0);
+				opts->poll_cycle_set = true;
+			}
+		}
 		else if (starts_with("loglevel=", line, k)) {
 			if (!opts->loglevel_set) {
 				opts->loglevel_set = loglevel_conv_string_to_int(&line[k], &opts->loglevel);
@@ -170,6 +181,7 @@ static void print_help_message_and_exit(const char *name)
 
 	fprintf(stderr, "\nCommand line options: \n");
 	fprintf(stderr, "  --i2c-bus=N        front panel controller I2C bus. By default, FP I2C bus will be discovered automatically. \n");
+	fprintf(stderr, "  --poll-cycle=T     number of seconds to poll for front panel request. \n");
 	fprintf(stderr, "  --loglevel=LEVEL   print to system log messages up to LEVEL. LEVEL may be either [notice], info, debug \n");
 	fprintf(stderr, "  --configfile=PATH  path to (optional) configuration file \n");
 	fprintf(stderr, "  --info             display brief system information relevant for this daemon and exit \n");
@@ -177,6 +189,7 @@ static void print_help_message_and_exit(const char *name)
 
 	fprintf(stderr, "\nConfiguration file options: \n");
 	fprintf(stderr, "  i2c-bus=N \n");
+	fprintf(stderr, "  poll-cycle=T \n");
 	fprintf(stderr, "  loglevel=LEVEL \n");
 	fprintf(stderr, "  disable=FUNC1[,FUNC2[,...]]  disable particular functionality, that may be requested by the FP controller. FUNC may be: \n");
 	fprintf(stderr, "                               HDDTR  HDD temperature \n");
@@ -193,6 +206,7 @@ static void options_load_defaults(Options *opts)
 	memset(opts, 0, sizeof(Options));
 
 	/* non-zero default values */
+	opts->poll_cycle = ATFP_MAIN_POLL_CYCLE;
 	opts->loglevel = LOG_NOTICE;
 	strcpy(opts->configfile, ATFP_DAEMON_CONFIGFILE);
 }
@@ -218,6 +232,7 @@ void show_options(Options *opts)
 	printf("help        : %c \n", opts->help ? '+' : '-');
 	printf("info        : %c \n", opts->info ? '+' : '-');
 	printf("i2c-bus     : %d [%c] \n", opts->i2c_bus, opts->i2c_bus_set ? '+' : '-');
+	printf("poll-cycle  : %d [%c] \n", opts->poll_cycle, opts->poll_cycle_set ? '+' : '-');
 	printf("loglevel    : %d [%c] \n", opts->loglevel, opts->loglevel_set ? '+' : '-');
 	printf("configfile  : %s \n", opts->configfile);
 	printf("disable     : 0x%016lx \n", opts->disable);

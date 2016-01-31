@@ -207,7 +207,7 @@ static void main_thread(void *priv_context, void *shared_context)
 	}
 
 	/* program our next appearance */
-	alarm(ATFP_MAIN_POLL_CYCLE);
+	alarm(options.poll_cycle);
 }
 
 

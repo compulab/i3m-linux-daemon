@@ -14,12 +14,14 @@ typedef struct {
 	bool help;
 	bool info;
 	int i2c_bus;
+	int poll_cycle;
 	int loglevel;
 	char configfile[128];
 	long disable;
 
 	/* _private_ */
 	bool i2c_bus_set;
+	bool poll_cycle_set;
 	bool loglevel_set;
 } Options;
 
