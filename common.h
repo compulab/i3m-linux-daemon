@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2015, CompuLab ltd.
  * Author: Andrey Gelman <andrey.gelman@compulab.co.il>
- * License: GPL-2
+ * License: GNU GPLv2 or later, at your option
  */
 
 #ifndef _COMMON_H
