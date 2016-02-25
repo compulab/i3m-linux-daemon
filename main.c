@@ -24,7 +24,7 @@
 #include "sensors.h"
 #include "domain-logic.h"
 #include "stats.h"
-#include "pci-tools.h"
+#include "vga-tools.h"
 #include "options.h"
 
 

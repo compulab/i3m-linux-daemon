@@ -13,7 +13,7 @@
 #include "panel.h"
 #include "sensors.h"
 #include "cpu-freq.h"
-#include "pci-tools.h"
+#include "vga-tools.h"
 #include "nvml-tools.h"
 
 /*
