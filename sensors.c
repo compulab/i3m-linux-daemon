@@ -204,6 +204,7 @@ int sensors_nouveau_init(void)
 	chipname = sensors_get_detected_chips(&chipmatch, &chipno);
 	if ( !chipname ) {
 		/* Ok: quite possibly nouveau driver is not in use */
+		slogw("nouveau: temperature sensor was not detected");
 		return -ENODEV;
 	}
 

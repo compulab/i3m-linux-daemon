@@ -13,8 +13,14 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <asm-generic/errno-base.h>
 
 #include "common.h"
+#include "nvml-tools.h"
+#include "sensors.h"
+
+
+int (*GPU_get_temperature)(int *temp);
 
 
 #define SYS_PCI_DEVICES			"/sys/bus/pci/devices"
@@ -163,5 +169,69 @@ char *vga_driver_name_list(void)
 	}
 
 	return name_list;
+}
+
+
+static int nvidia_gpu_get_temperature(int *temp)
+{
+	return nvml_gpu_temp_read((unsigned int *)temp);
+}
+
+/*
+ * Intel's integrated GPU seemingly does not report temperature,
+ * however, being integrated on the chip allows us to evaluate
+ * its temperature as comparable to CPU core temperature.
+ */
+static int i915_gpu_get_temperature(int *temp)
+{
+	int core_id;
+	int temp0;
+	int err;
+
+	*temp = 0;
+	for (core_id = 0; core_id >= 0;) {
+		err = sensors_coretemp_read(&core_id, &temp0);
+		if ( err )
+			break;
+		if (temp0 > *temp)
+			*temp = temp0;
+	}
+
+	return err;
+}
+
+static int undefined_gpu_get_temperature(int *temp)
+{
+	*temp = 0;
+	return -EINVAL;
+}
+
+void gpu_sensors_init(void)
+{
+	const char *name_list;
+
+	name_list = vga_driver_name_list();
+	/*
+	 * As name_list might contain more than one VGA driver name,
+	 * the order of appearance below, prioritizes which device
+	 * temperature will be reported to the front panel.
+	 */
+	if (strstr(name_list, "nvidia")) {
+		/* nvidia proprietary driver */
+		GPU_get_temperature = nvidia_gpu_get_temperature;
+	}
+	else if (strstr(name_list, "nouveau")) {
+		/* nouveau open source driver */
+		sensors_nouveau_init();
+		GPU_get_temperature = sensors_nouveau_read;
+	}
+	else if (strstr(name_list, "i915")) {
+		/* i915 open source driver */
+		GPU_get_temperature = i915_gpu_get_temperature;
+	}
+	else {
+		/* non-identified GPU - ignore it */
+		GPU_get_temperature = undefined_gpu_get_temperature;
+	}
 }
 

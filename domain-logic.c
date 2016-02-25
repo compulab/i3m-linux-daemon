@@ -14,7 +14,6 @@
 #include "sensors.h"
 #include "cpu-freq.h"
 #include "vga-tools.h"
-#include "nvml-tools.h"
 
 /*
  * Getting and setting core temperature.
@@ -129,48 +128,11 @@ static void set_gpu_temperature(void *priv_context, void *shared_context)
 
 static void get_gpu_temperature(void *priv_context, void *shared_context)
 {
-	char *name_list;
 	int temp;
 	int *context;
 	int err;
 
-	name_list = vga_driver_name_list();
-	/*
-	 * As name_list might contain more than one VGA driver name,
-	 * the order of appearance below, prioritizes which device
-	 * temperature will be reported to the front panel.
-	 */
-	if (strstr(name_list, "nvidia")) {
-		/* nvidia proprietary driver */
-		err = nvml_gpu_temp_read((unsigned int *)&temp);
-	}
-	else if (strstr(name_list, "nouveau")) {
-		/* nouveau open source driver */
-		err = sensors_nouveau_read(&temp);
-	}
-	else if (strstr(name_list, "i915")) {
-		/* i915 open source driver
-		 * Intel's integrated GPU seemingly does not report temperature,
-		 * however, being integrated on the chip allows us to evaluate
-		 * its temperature as comparable to CPU core temperature.
-		 */
-		int core_id;
-		int temp0;
-
-		temp = 0;
-		for (core_id = 0; core_id >= 0;) {
-			err = sensors_coretemp_read(&core_id, &temp0);
-			if ( err )
-				break;
-			if (temp0 > temp)
-				temp = temp0;
-		}
-	}
-	else {
-		/* non-identified GPU - ignore it */
-		err = -1;
-	}
-
+	err = GPU_get_temperature(&temp);
 	if (err) {
 		slogw("GPU Temp: abort request");
 		return;
