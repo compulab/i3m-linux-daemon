@@ -7,7 +7,7 @@
 #ifndef _PCI_TOOLS_H
 #define _PCI_TOOLS_H
 
-char *get_vga_driver_name(void);
+char *vga_driver_name_list(void);
 
 #endif	/* _PCI_TOOLS_H */
 

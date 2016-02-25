@@ -22,7 +22,8 @@
 #define PCI_CLASS_VGA			0x030000
 
 
-typedef struct {
+typedef struct PciDevice {
+	struct PciDevice *next;
 	unsigned int pci_class;
 	char driver[DRIVER_BUF_SIZE];
 } PciDevice;
@@ -62,13 +63,27 @@ static void scan_dirs(const char *path, int (*visitor)(DIR *dir, void *arg), voi
 	closedir(root);
 }
 
+static PciDevice *new_pci_device(PciDevice *dev, const char *drv_name)
+{
+	PciDevice *new_dev;
+
+	new_dev = (PciDevice *)malloc(sizeof(PciDevice));
+	new_dev->next = dev;
+	if (dev != NULL)
+		new_dev->pci_class = dev->pci_class;
+
+	strcpy(new_dev->driver, drv_name);
+	return new_dev;
+}
+
 /*
  * Return:
  * 'keep_searching' flag
  */
 static int process_dir(DIR *dir, void *arg)
 {
-	PciDevice *dev = (PciDevice *)arg;
+	PciDevice **ptr_dev = (PciDevice **)arg;
+	PciDevice *dev = *ptr_dev;
 	struct dirent *d;
 	struct dirent *d_class = NULL;
 	struct dirent *d_driver = NULL;
@@ -106,25 +121,47 @@ static int process_dir(DIR *dir, void *arg)
 		return 1;
 	buffer[n] = '\0';
 
-	strcpy(dev->driver, basename(buffer));
-	return 0;
+	*ptr_dev = new_pci_device(dev, basename(buffer));
+	return 1;
 }
 
 
-static PciDevice vga_dev;
-static bool vga_dev_initialized = false;
+static char *name_list = NULL;
 
-char *get_vga_driver_name(void)
+char *vga_driver_name_list(void)
 {
-	if ( vga_dev_initialized )
-		return vga_dev.driver;
+	PciDevice *vga_dev;
+	PciDevice *p;
+	int size;
+	int size_left;
 
-	vga_dev_initialized = true;
+	if (name_list != NULL)
+		return name_list;
 
-	vga_dev.pci_class = PCI_CLASS_VGA;
-	strcpy(vga_dev.driver, "unknown");
+	vga_dev = new_pci_device(NULL, "none");
+	vga_dev->pci_class = PCI_CLASS_VGA;
+
 	scan_dirs(SYS_PCI_DEVICES, process_dir, &vga_dev);
 
-	return vga_dev.driver;
+
+	/* convert vga_dev linked list into space-separated list of VGA driver names */
+	size = 16;
+	size_left = size;
+	name_list = (char *)calloc(size, 1);
+	while (vga_dev != NULL) {
+		if (strlen(vga_dev->driver) > (size_left + 2)) {
+			size += 16;
+			size_left += 16;
+			name_list = realloc(name_list, size);
+			continue;
+		}
+
+		size_left -= sprintf((name_list + strlen(name_list)), "%s ", vga_dev->driver);
+		p = vga_dev;
+		vga_dev = p->next;
+		free(p);
+	}
+
+	return name_list;
 }
 

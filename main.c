@@ -215,7 +215,13 @@ int main(int argc, char *argv[])
 {
 	options_process_or_abort(&options, argc, argv);
 	if (options.info) {
-		printf("Video driver: %s \n", get_vga_driver_name());
+		char *p;
+		char *name_list = vga_driver_name_list();
+
+		printf("Video drivers: %s \n", strtok(name_list, " "));
+		while ((p = strtok(NULL, " ")) != NULL)
+			printf("               %s \n", p);
+
 		printf("\nTemperature sensors: \n");
 		sensors_show(SENSORS_FEATURE_TEMP);
 		exit(0);
