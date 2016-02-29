@@ -24,6 +24,7 @@
 typedef struct {
 	bool is_initialized;
 	int i2c_desc;
+	unsigned int i2c_delay;
 } Panel;
 
 static Panel panel = {0};
@@ -61,7 +62,7 @@ i2c_out_err0:
 	return err;
 }
 
-int panel_open_i2c(int i2c_bus, int i2c_addr)
+int panel_open_i2c(int i2c_bus, int i2c_addr, unsigned int i2c_delay)
 {
 	int i2c_devnum;
 
@@ -76,6 +77,7 @@ int panel_open_i2c(int i2c_bus, int i2c_addr)
 
 	panel.is_initialized = true;
 	panel.i2c_desc = i2c_devnum;
+	panel.i2c_delay = i2c_delay;
 	return 0;
 }
 
@@ -106,6 +108,12 @@ int panel_read_byte(unsigned regno)
 int panel_write_byte(unsigned regno, int data)
 {
 	int err;
+
+	/*
+	 * Optional delay [uSec] in order to control output rate.
+	 */
+	if (panel.i2c_delay > 0)
+		usleep(panel.i2c_delay);
 
 	err = i2c_smbus_write_byte_data(panel.i2c_desc, regno, data);
 	if (err < 0) {

@@ -14,6 +14,7 @@ typedef struct {
 	bool help;
 	bool info;
 	int i2c_bus;
+	unsigned int i2c_delay;
 	int poll_cycle;
 	int loglevel;
 	char configfile[128];
@@ -21,6 +22,7 @@ typedef struct {
 
 	/* _private_ */
 	bool i2c_bus_set;
+	bool i2c_delay_set;
 	bool poll_cycle_set;
 	bool loglevel_set;
 } Options;

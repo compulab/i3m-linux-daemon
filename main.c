@@ -136,7 +136,7 @@ static void initialize(void)
 	install_sighandler(SIGUSR1);
 	install_sighandler(SIGUSR2);
 	daemon_termination(DTERM_INIT);
-	err = panel_open_i2c(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
+	err = panel_open_i2c(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR, options.i2c_delay);
 	if ( err )
 		exit(1);
 	err = panel_reset();
