@@ -131,14 +131,13 @@ static void daemonize(void)
 static void initialize(void)
 {
 	int err;
-	int panel;
 
 	install_sighandler(SIGALRM);
 	install_sighandler(SIGUSR1);
 	install_sighandler(SIGUSR2);
 	daemon_termination(DTERM_INIT);
-	panel = panel_open_i2c_device(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
-	if (panel < 0)
+	err = panel_open_i2c(options.i2c_bus, I2C_PANEL_INTERFACE_ADDR);
+	if ( err )
 		exit(1);
 	err = panel_reset();
 	if ( err )

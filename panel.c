@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <asm-generic/errno-base.h>
 #include <linux/i2c-dev.h>
 
 #include "panel.h"
@@ -21,7 +21,12 @@
  * Panel descriptor. 
  * Panel descriptor is managed as a singleton object. 
  */
-static int panel = -1;
+typedef struct {
+	bool is_initialized;
+	int i2c_desc;
+} Panel;
+
+static Panel panel = {0};
 
 
 /*
@@ -56,33 +61,38 @@ i2c_out_err0:
 	return err;
 }
 
-int panel_open_i2c_device(int i2c_bus, int i2c_addr)
+int panel_open_i2c(int i2c_bus, int i2c_addr)
 {
 	int i2c_devnum;
 
-	if (panel >= 0) {
+	if ( panel.is_initialized ) {
 		sloge("panel i2c device is already open");
-		return panel;
+		return -EEXIST;
 	}
 
 	i2c_devnum = __panel_open_i2c_device(i2c_bus, i2c_addr);
-	if (i2c_devnum >= 0)
-		panel = i2c_devnum;
+	if (i2c_devnum < 0)
+		return i2c_devnum;
 
-	return i2c_devnum;
+	panel.is_initialized = true;
+	panel.i2c_desc = i2c_devnum;
+	return 0;
 }
 
 void panel_close(void)
 {
-	close(panel);
-	panel = -1;
+	if ( !panel.is_initialized )
+		return;
+
+	close(panel.i2c_desc);
+	memset(&panel, 0, sizeof(Panel));
 }
 
 int panel_read_byte(unsigned regno)
 {
 	int value;
 
-	value = i2c_smbus_read_byte_data(panel, regno);
+	value = i2c_smbus_read_byte_data(panel.i2c_desc, regno);
 	if (value < 0) {
 		sloge("Could not read register %02x: %d", regno, value);
 	}
@@ -97,7 +107,7 @@ int panel_write_byte(unsigned regno, int data)
 {
 	int err;
 
-	err = i2c_smbus_write_byte_data(panel, regno, data);
+	err = i2c_smbus_write_byte_data(panel.i2c_desc, regno, data);
 	if (err < 0) {
 		sloge("Could not write register %02x: %d", regno, err);
 	}
