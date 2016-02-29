@@ -50,9 +50,18 @@ static NvmlHandle *nvml_dll_load(void)
 
 	load_symbol(dllh, nvmlInit, dlerrstr, dll_out_err1);
 	load_symbol(dllh, nvmlShutdown, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlSystemGetDriverVersion, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlSystemGetNVMLVersion, dlerrstr, dll_out_err1);
 	load_symbol(dllh, nvmlDeviceGetCount, dlerrstr, dll_out_err1);
 	load_symbol(dllh, nvmlDeviceGetHandleByIndex, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlDeviceGetName, dlerrstr, dll_out_err1);
 	load_symbol(dllh, nvmlDeviceGetTemperature, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlDeviceGetPowerManagementMode, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlDeviceGetPowerManagementLimit, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlDeviceGetPowerManagementLimitConstraints, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlDeviceGetPowerManagementDefaultLimit, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlDeviceSetPersistenceMode, dlerrstr, dll_out_err1);
+	load_symbol(dllh, nvmlDeviceSetPowerManagementLimit, dlerrstr, dll_out_err1);
 
 	return dllh;
 
