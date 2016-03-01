@@ -195,7 +195,7 @@ static void print_help_message_and_exit(const char *name)
 	fprintf(stderr, "  --i2c-delay=T      number of micro-seconds to delay prior to I2C-writing front panel. By default, I2C delay is zero. \n");
 	fprintf(stderr, "  --poll-cycle=T     number of seconds to poll for front panel request. \n");
 	fprintf(stderr, "  --loglevel=LEVEL   print to system log messages up to LEVEL. LEVEL may be either [notice], info, debug \n");
-	fprintf(stderr, "  --configfile=PATH  path to (optional) configuration file \n");
+	fprintf(stderr, "  --configfile=PATH  path to (optional) configuration file. By default '/etc/airtop-fpsvc.conf' will be used. \n");
 	fprintf(stderr, "  --info             display brief system information relevant for this daemon and exit \n");
 	fprintf(stderr, "  --help             display this help and exit \n");
 
@@ -209,7 +209,14 @@ static void print_help_message_and_exit(const char *name)
 	fprintf(stderr, "                               CPUFR  CPU frequency \n");
 	fprintf(stderr, "                               CPUTR  CPU temperature \n");
 	fprintf(stderr, "                               GPUTR  GPU temperature \n");
-	fprintf(stderr, "Command line options take precedence over configuration file options. \n");
+
+	fprintf(stderr, "\nNotice: \n");
+	fprintf(stderr, "  - Command line options take precedence over configuration file options. \n");
+	fprintf(stderr, "  - Default option values are expected to meet the requirements of normal operation. \n");
+
+	fprintf(stderr, "\nPOSIX signals interface: \n");
+	fprintf(stderr, "  SIGTERM            stop the daemon. \n");
+	fprintf(stderr, "  SIGUSR1            print to the logger brief runtime statistics. \n");
 
 	exit(1);
 }
