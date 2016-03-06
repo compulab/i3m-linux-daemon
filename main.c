@@ -25,6 +25,7 @@
 #include "domain-logic.h"
 #include "stats.h"
 #include "vga-tools.h"
+#include "hdd-info.h"
 #include "options.h"
 
 
@@ -167,6 +168,8 @@ static void show_info_and_exit(void)
 {
 	char *p;
 	char *name_list;
+	DList *dl;
+	SMARTinfo *si;
 
 	name_list = vga_driver_name_list();
 	printf("Video drivers: %s \n", strtok(name_list, " "));
@@ -175,6 +178,18 @@ static void show_info_and_exit(void)
 
 	printf("\nTemperature sensors: \n");
 	sensors_show(SENSORS_FEATURE_TEMP);
+
+	printf("\nHDD: \n");
+	hdd_get_temperature(&dl);
+	while ((si = dlist_pop_front(dl)) != NULL) {
+		printf("%10s: ", si->devname);
+		if (si->size_valid)
+			printf("%u [GB] \n", si->size_GB);
+		else
+			printf("-- \n");
+
+		delete_SMARTinfo(si);
+	}
 
 	exit(0);
 }
