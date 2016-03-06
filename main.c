@@ -117,7 +117,11 @@ static void daemonize(void)
 	/*
 	 * fork background daemon
 	 */
-	daemon(0, 0);
+	err = daemon(0, 0);
+	if (err < 0) {
+		fprintf(stderr, "Could not daemon-ize: %m \n");
+		exit(1);
+	}
 	umask(0022);
 
 	/*

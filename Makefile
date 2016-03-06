@@ -26,6 +26,8 @@ RM_CMD      = rm -rf
 ifdef debug
 	CFLAGS += -g
 	STRIP_CMD = @\#
+else
+	CFLAGS += -O2
 endif
 
 all: $(SOURCES) $(OBJS) $(BINDIR)

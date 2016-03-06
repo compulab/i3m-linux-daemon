@@ -112,7 +112,7 @@ static int process_dir(DIR *dir, void *arg)
 	if (fd < 0)
 		return 1;
 
-	read(fd, buffer, sizeof(buffer));
+	n = read(fd, buffer, sizeof(buffer));
 	close(fd);
 
 	if (strtol(buffer, NULL, 0) != dev->pci_class)

@@ -46,7 +46,7 @@ static void parse_cpuinfo(FILE *cpuinfo, int *num_cores, int *freq_table)
 	int core_id;
 	float cpu_freq;
 	int real_num_cores;
-	int missing_data_bits;
+	int missing_data_bits = 0;
 	bool data_valid;
 
 	memset(freq_table, 0, *num_cores);
