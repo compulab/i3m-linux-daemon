@@ -163,6 +163,22 @@ static void cleanup(void)
 	sensors_cleanup();
 }
 
+static void show_info_and_exit(void)
+{
+	char *p;
+	char *name_list;
+
+	name_list = vga_driver_name_list();
+	printf("Video drivers: %s \n", strtok(name_list, " "));
+	while ((p = strtok(NULL, " ")) != NULL)
+		printf("               %s \n", p);
+
+	printf("\nTemperature sensors: \n");
+	sensors_show(SENSORS_FEATURE_TEMP);
+
+	exit(0);
+}
+
 #define UNSUPPORTED_REQ_MESSAGE(r)	do { slogw("%s: "#r" request is not supported", __FUNCTION__); } while (0)
 
 static void main_thread(void *priv_context, void *shared_context)
@@ -213,18 +229,9 @@ static void main_thread(void *priv_context, void *shared_context)
 int main(int argc, char *argv[])
 {
 	options_process_or_abort(&options, argc, argv);
-	if (options.info) {
-		char *p;
-		char *name_list = vga_driver_name_list();
+	if (options.info)
+		show_info_and_exit();
 
-		printf("Video drivers: %s \n", strtok(name_list, " "));
-		while ((p = strtok(NULL, " ")) != NULL)
-			printf("               %s \n", p);
-
-		printf("\nTemperature sensors: \n");
-		sensors_show(SENSORS_FEATURE_TEMP);
-		exit(0);
-	}
 	if ( !options.i2c_bus_set ) {
 		options.i2c_bus = panel_lookup_i2c_bus();
 		if (options.i2c_bus < 0) {
