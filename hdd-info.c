@@ -37,9 +37,6 @@ SMARTinfo *new_SMARTinfo(void)
 {
 	SMARTinfo *si;
 
-	if (SMARTinfo_freelist == NULL)
-		SMARTinfo_freelist = dlist_create(NULL);
-
 	si = dlist_pop_front(SMARTinfo_freelist);
 	if (si == NULL)
 		si = (SMARTinfo *)malloc(sizeof(SMARTinfo));
@@ -64,8 +61,19 @@ static void hdd_info_cleanup(void)
 	while ((si = dlist_pop_front(SMARTinfo_freelist)) != NULL)
 		free(si);
 
+	while ((si = dlist_pop_front(smart_devices)) != NULL)
+		free(si);
+
 	dlist_destroy(SMARTinfo_freelist);
 	dlist_destroy(smart_devices);
+}
+
+static void hdd_info_init(void)
+{
+	smart_devices = dlist_create(NULL);
+	SMARTinfo_freelist = dlist_create(NULL);
+
+	atexit(hdd_info_cleanup);
 }
 
 
@@ -165,10 +173,8 @@ gettemp_out0:
 
 void hdd_get_temperature(DList **sd)
 {
-	if (smart_devices == NULL) {
-		smart_devices = dlist_create(NULL);
-		atexit(hdd_info_cleanup);
-	}
+	if (smart_devices == NULL)
+		hdd_info_init();
 
 	scan_dirs(SYS_BLOCK_PATH, atasmart_get_info, smart_devices);
 	*sd = smart_devices;
