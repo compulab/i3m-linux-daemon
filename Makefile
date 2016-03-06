@@ -6,7 +6,7 @@
 
 SOURCES = main.c panel.c sensors.c queue.c thread-pool.c domain-logic.c \
 	i2c-tools.c stats.c cpu-freq.c vga-tools.c nvml-tools.c \
-	dlist.c watchdog.c options.c
+	dlist.c watchdog.c options.c hdd-info.c
 
 OBJDIR  = obj
 BINDIR  = bin
@@ -16,7 +16,7 @@ NVMLDIR = nvml
 
 OBJS    = $(SOURCES:%.c=$(OBJDIR)/%.o)
 CFLAGS  = -Wall -I$(NVMLDIR)
-LFLAGS  = -Wall -lsensors -lpthread -lm -ldl -rdynamic
+LFLAGS  = -Wall -lsensors -lpthread -lm -ldl -latasmart -rdynamic
 COMPILE_CMD = gcc $(CFLAGS)
 STRIP_CMD   = strip
 LINK_CMD    = gcc $(LFLAGS)

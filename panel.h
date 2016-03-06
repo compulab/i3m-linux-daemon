@@ -20,6 +20,7 @@ long panel_get_pending_requests(void);
 int panel_set_temperature(int cpu_id, int temp);
 int panel_set_frequency(int cpu_id, int freq);
 int panel_set_gpu_temp(int temp);
+int panel_set_hdd_temp(int hdd_id, int temp);
 int panel_reset(void);
 
 int panel_lookup_i2c_bus(void);

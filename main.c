@@ -185,7 +185,7 @@ static void main_thread(void *priv_context, void *shared_context)
 			break;
 
 		case ATFP_MASK_PENDR0_HDDTR:
-			UNSUPPORTED_REQ_MESSAGE(HDDTR);
+			panel_update_hdd_temp();
 			break;
 
 		case ATFP_MASK_PENDR0_CPUFR:

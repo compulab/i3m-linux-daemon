@@ -225,6 +225,24 @@ int panel_set_gpu_temp(int temp)
 	return err;
 }
 
+int panel_set_hdd_temp(int hdd_id, int temp)
+{
+	int err;
+	int temp_reg = ATFP_REG_HDD0T + hdd_id;
+	int valid_mask = 1 << hdd_id;
+
+	if ((hdd_id < 0) || (hdd_id > 7)) {
+		slogw("HDD: index out of range: %d", hdd_id);
+		return -EINVAL;
+	}
+
+	err = panel_write_byte(temp_reg, temp);
+	if ( !err )
+		err = panel_write_byte(ATFP_REG_HDDTS, valid_mask);
+
+	return err;
+}
+
 int panel_reset(void)
 {
 	return panel_write_byte(ATFP_REG_FPCTRL, ATFP_MASK_FPCTRL_RST);

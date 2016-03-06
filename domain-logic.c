@@ -14,6 +14,7 @@
 #include "sensors.h"
 #include "cpu-freq.h"
 #include "vga-tools.h"
+#include "hdd-info.h"
 
 /*
  * Getting and setting core temperature.
@@ -146,5 +147,44 @@ static void get_gpu_temperature(void *priv_context, void *shared_context)
 void panel_update_gpu_temp(void)
 {
 	thread_pool_add_request(backend_thread, get_gpu_temperature, NULL);
+}
+
+
+/*
+ * Getting and setting HDD temperature.
+ */
+
+static void set_hdd_temperature(void *priv_context, void *shared_context)
+{
+	DList *hdd_list = (DList *)priv_context;
+	SMARTinfo *si;
+	int index;
+
+	index = 0;
+	while ((si = dlist_pop_front(hdd_list)) != NULL) {
+		if (si->temp_valid) {
+			slogd("HDDTR: %s: %u [degC]", si->devname, si->temp);
+			panel_set_hdd_temp(index, si->temp);
+		}
+		else {
+			slogd("HDDTR: %s: --", si->devname);
+		}
+
+		delete_SMARTinfo(si);
+		++index;
+	}
+}
+
+static void get_hdd_temperature(void *priv_context, void *shared_context)
+{
+	DList *hdd_list;
+
+	hdd_get_temperature(&hdd_list);
+	thread_pool_add_request(frontend_thread, set_hdd_temperature, hdd_list);
+}
+
+void panel_update_hdd_temp(void)
+{
+	thread_pool_add_request(backend_thread, get_hdd_temperature, NULL);
 }
 
