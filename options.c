@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <getopt.h>
 #include <libgen.h>
 #include <errno.h>
@@ -109,6 +110,21 @@ static int options_parse_cmdline(Options *opts, int argc, char *argv[])
 	}
 }
 
+static bool is_nodata_line(const char *line)
+{
+	int i;
+
+	if (line == NULL)
+		return true;
+
+	for (i = 0; line[i] != '\0'; ++i) {
+		if ( !isspace(line[i]) )
+			return false;
+	}
+
+	return true;
+}
+
 static int options_parse_configfile(Options *opts, const char *filename)
 {
 	FILE *config;
@@ -132,7 +148,7 @@ static int options_parse_configfile(Options *opts, const char *filename)
 
 	while ( !feof(config) ) {
 		line = fgets(buff, sizeof(buff), config);
-		if ((line == NULL) || (strlen(line) == 0)) {
+		if (is_nodata_line(line)) {
 			continue;
 		}
 		else if (starts_with("#", line, k)) {
