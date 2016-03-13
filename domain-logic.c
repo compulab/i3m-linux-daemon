@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "registers.h"
 #include "thread-pool.h"
 #include "panel.h"
 #include "sensors.h"
@@ -41,6 +42,7 @@ static void set_temperature(void *priv_context, void *shared_context)
 	}
 
 	free(context);
+	in_processing_remove_request(ATFP_MASK_PENDR0_CPUTR, shared_context);
 }
 
 static void get_temperature(void *priv_context, void *shared_context)
@@ -96,6 +98,7 @@ static void set_frequency(void *priv_context, void *shared_context)
 	}
 
 	free(context);
+	in_processing_remove_request(ATFP_MASK_PENDR0_CPUFR, shared_context);
 }
 
 static void get_frequency(void *priv_context, void *shared_context)
@@ -130,6 +133,8 @@ static void set_gpu_temperature(void *priv_context, void *shared_context)
 	else {
 		slogw("GPU Temp: abort request");
 	}
+
+	in_processing_remove_request(ATFP_MASK_PENDR0_GPUTR, shared_context);
 }
 
 static void get_gpu_temperature(void *priv_context, void *shared_context)
@@ -178,6 +183,8 @@ static void set_hdd_temperature(void *priv_context, void *shared_context)
 		delete_SMARTinfo(si);
 		++index;
 	}
+
+	in_processing_remove_request(ATFP_MASK_PENDR0_HDDTR, shared_context);
 }
 
 static void get_hdd_temperature(void *priv_context, void *shared_context)

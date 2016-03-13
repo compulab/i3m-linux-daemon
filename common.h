@@ -22,6 +22,15 @@ extern ThreadPool *backend_thread;
 #define slogd(...)			syslog(LOG_DEBUG,   __VA_ARGS__)
 
 
+typedef struct {
+	long bitmap;
+} InProcessingBitmap;
+
+void in_processing_add_request(long request, InProcessingBitmap *processing);
+void in_processing_remove_request(long request, InProcessingBitmap *processing);
+long in_processing_get_bitmap(InProcessingBitmap *processing);
+
+
 #define ATFP_DAEMON_LOCKFILE		"/tmp/airtop-fpsvc.lock"
 #define ATFP_SYSLOG_IDENT		"at-fpsvc"
 #define ATFP_DAEMON_CONFIGFILE		"/etc/airtop-fpsvc.conf"

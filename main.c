@@ -32,6 +32,7 @@
 ThreadPool *frontend_thread;
 ThreadPool *backend_thread;
 
+static InProcessingBitmap in_processing = {0};
 static Options options;
 
 static void main_thread(void *priv_context, void *shared_context);
@@ -154,7 +155,7 @@ static void initialize(void)
 
 	gpu_sensors_init();
 
-	frontend_thread = thread_pool_create(1, ATFP_FRONTEND_QUEUE_LEN, NULL);
+	frontend_thread = thread_pool_create(1, ATFP_FRONTEND_QUEUE_LEN, &in_processing);
 	backend_thread = thread_pool_create(ATFP_BACKEND_THREAD_NUM, ATFP_BACKEND_QUEUE_LEN, NULL);
 }
 
@@ -200,20 +201,40 @@ static void show_info_and_exit(void)
 
 #define UNSUPPORTED_REQ_MESSAGE(r)	do { slogw("%s: "#r" request is not supported", __FUNCTION__); } while (0)
 
+void in_processing_add_request(long request, InProcessingBitmap *processing)
+{
+	processing->bitmap |= request;
+}
+
+void in_processing_remove_request(long request, InProcessingBitmap *processing)
+{
+	processing->bitmap &= ~request;
+}
+
+long in_processing_get_bitmap(InProcessingBitmap *processing)
+{
+	return processing->bitmap;
+}
+
 static void main_thread(void *priv_context, void *shared_context)
 {
 	int i;
 	long request_bitmap;
 	long request;
+	InProcessingBitmap *processing = (InProcessingBitmap *)shared_context;
 
 	request_bitmap = panel_get_pending_requests();
 
 	/* (optionally) disable particular functions */
 	request_bitmap &= ~options.disable;
 
+	/* ignore requests currently being processed */
+	request_bitmap &= ~in_processing_get_bitmap(processing);
+
 	/* dispatch each request */
 	for (i = 0; i < (sizeof(request_bitmap) * 8); ++i) {
 		request = request_bitmap & (1L << i);
+		in_processing_add_request(request, processing);
 		switch (request) {
 		case 0:
 			/* no pending requests */
@@ -236,6 +257,8 @@ static void main_thread(void *priv_context, void *shared_context)
 			break;
 
 		default:
+			/* 'request' should not be added in the first place */
+			in_processing_remove_request(request, processing);
 			break;
 		}
 	}
