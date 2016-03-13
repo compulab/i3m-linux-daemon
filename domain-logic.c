@@ -122,9 +122,14 @@ static void set_gpu_temperature(void *priv_context, void *shared_context)
 {
 	int *temp = (int *)priv_context;
 
-	slogd("GPUTR: %d [degC]", *temp);
-	panel_set_gpu_temp(*temp);
-	free(temp);
+	if (temp != NULL) {
+		slogd("GPUTR: %d [degC]", *temp);
+		panel_set_gpu_temp(*temp);
+		free(temp);
+	}
+	else {
+		slogw("GPU Temp: abort request");
+	}
 }
 
 static void get_gpu_temperature(void *priv_context, void *shared_context)
@@ -134,13 +139,13 @@ static void get_gpu_temperature(void *priv_context, void *shared_context)
 	int err;
 
 	err = GPU_get_temperature(&temp);
-	if (err) {
-		slogw("GPU Temp: abort request");
-		return;
+	if (err == 0) {
+		context = (int *)malloc(sizeof(int));
+		*context = temp;
 	}
-
-	context = (int *)malloc(sizeof(int));
-	*context = temp;
+	else {
+		context = NULL;
+	}
 	thread_pool_add_request(frontend_thread, set_gpu_temperature, context);
 }
 
