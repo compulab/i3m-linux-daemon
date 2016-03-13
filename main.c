@@ -124,19 +124,15 @@ static void daemonize(void)
 		exit(1);
 	}
 	umask(0022);
-
-	/*
-	 * set up logging
-	 */
-	openlog(ATFP_SYSLOG_IDENT, LOG_PID, LOG_USER);
-	atexit(closelog);
-	setlogmask(LOG_UPTO(options.loglevel));
-	slogn("AirTop Front-Panel Service -- start");
 }
 
 static void initialize(void)
 {
 	int err;
+
+	/* set up logging */
+	openlog(ATFP_SYSLOG_IDENT, LOG_PID, LOG_USER);
+	setlogmask(LOG_UPTO(options.loglevel));
 
 	install_sighandler(SIGALRM);
 	install_sighandler(SIGUSR1);
@@ -167,6 +163,7 @@ static void cleanup(void)
 
 	panel_close();
 	sensors_cleanup();
+	closelog();
 }
 
 static void show_info_and_exit(void)
@@ -284,6 +281,7 @@ int main(int argc, char *argv[])
 
 	daemonize();
 	initialize();
+	slogn("AirTop Front-Panel Service -- start");
 	/*
 	 * Main FP communication routine is armed
 	 * upon SIGALRM reception.
