@@ -146,7 +146,7 @@ static int atasmart_get_info(const char *devname, void *arg)
 	strncpy(si->devname, devname, HDD_DEVNAME_SIZE);
 	err = sk_disk_smart_get_temperature(d, &mkelvin);
 	if (err < 0) {
-		slogd("%s: SMART: temperature is not available", device);
+		slogi("%s: SMART: temperature is not available", device);
 	}
 	else {
 		si->temp = to_celsius(mkelvin);
@@ -155,7 +155,7 @@ static int atasmart_get_info(const char *devname, void *arg)
 
 	err = sk_disk_get_size(d, &size_B);
 	if (err < 0) {
-		slogd("%s: SMART: size is not available", device);
+		slogi("%s: SMART: size is not available", device);
 	}
 	else {
 		si->size_GB = (unsigned int)(size_B >> 30);
