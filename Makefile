@@ -16,7 +16,8 @@ NVMLDIR = nvml
 
 OBJS    = $(SOURCES:%.c=$(OBJDIR)/%.o)
 CFLAGS  = -Wall -I$(NVMLDIR)
-LFLAGS  = -Wall -lsensors -lpthread -lm -ldl -latasmart -rdynamic
+LFLAGS  = -Wall -rdynamic
+LLIBS   = -lsensors -lpthread -lm -ldl -latasmart
 COMPILE_CMD = gcc $(CFLAGS)
 STRIP_CMD   = strip
 LINK_CMD    = gcc $(LFLAGS)
@@ -31,7 +32,7 @@ else
 endif
 
 all: $(SOURCES) $(OBJS) $(BINDIR)
-	$(LINK_CMD) $(OBJS) -o $(OUTFILE)
+	$(LINK_CMD) $(OBJS) $(LLIBS) -o $(OUTFILE)
 	$(STRIP_CMD) $(OUTFILE)
 
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
