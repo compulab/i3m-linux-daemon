@@ -47,6 +47,9 @@ long in_processing_get_bitmap(InProcessingBitmap *processing);
 
 #define ATFP_WATCHDOG_DEFAULT_DELAY	5
 
+#define ATFP_DAEMON_POSTCODE_MSB	0xDA
+#define ATFP_DAEMON_POSTCODE_LSB	0xE7
+
 
 #endif	/* _COMMON_H */
 

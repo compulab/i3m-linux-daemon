@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "registers.h"
@@ -198,5 +199,60 @@ static void get_hdd_temperature(void *priv_context, void *shared_context)
 void panel_update_hdd_temp(void)
 {
 	thread_pool_add_request(backend_thread, get_hdd_temperature, NULL);
+}
+
+
+/*
+ * Store daemon postcode in Front Panel register.
+ *
+ * The purpose of the postcode is to let the FP know,
+ * the daemon is up and running.
+ * In case daemon postcode was not stored,
+ * the FP should display a reminder to install the daemon.
+ */
+
+typedef struct {
+	unsigned int delay_sec;
+	ThreadPoolWork func;
+} DelayInfo;
+
+/* backend */
+static void backend_delay(void *priv_context, void *shared_context)
+{
+	DelayInfo *di = (DelayInfo *)priv_context;
+
+	sleep(di->delay_sec);
+	thread_pool_add_request(frontend_thread, di->func, (void *)di);
+}
+
+/* frontend */
+void really_store_daemon_postcode(void *priv_context, void *shared_context)
+{
+	int err;
+
+	err = panel_store_daemon_postcode();
+	if (err == 0) {
+		/* success */
+		free(priv_context);
+		return;
+	}
+
+	/* retry */
+	thread_pool_add_request(backend_thread, backend_delay, priv_context);
+}
+
+DelayInfo *postcode_info;
+
+void FP_store_daemon_postcode(void)
+{
+	postcode_info = (DelayInfo *)calloc(1, sizeof(DelayInfo));
+
+	postcode_info->delay_sec = ATFP_MAIN_STARTUP_DELAY;
+	if (postcode_info->delay_sec >= ATFP_WATCHDOG_DEFAULT_DELAY)
+		postcode_info->delay_sec = ATFP_WATCHDOG_DEFAULT_DELAY >> 1;
+
+	postcode_info->func = really_store_daemon_postcode;
+
+	thread_pool_add_request(backend_thread, backend_delay, (void *)postcode_info);
 }
 

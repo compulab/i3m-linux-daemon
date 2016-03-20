@@ -11,6 +11,7 @@ void panel_update_temperature(void);
 void panel_update_frequency(void);
 void panel_update_gpu_temp(void);
 void panel_update_hdd_temp(void);
+void FP_store_daemon_postcode(void);
 
 #endif	/* _DOMAIN_LOGIC */
 

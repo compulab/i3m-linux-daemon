@@ -287,6 +287,7 @@ int main(int argc, char *argv[])
 	 * upon SIGALRM reception.
 	 */
 	alarm(ATFP_MAIN_STARTUP_DELAY);
+	FP_store_daemon_postcode();
 	daemon_termination(DTERM_WAIT);
 	slogn("AirTop Front-Panel Service -- stop");
 

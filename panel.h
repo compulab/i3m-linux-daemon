@@ -22,6 +22,7 @@ int panel_set_frequency(int cpu_id, int freq);
 int panel_set_gpu_temp(int temp);
 int panel_set_hdd_temp(int hdd_id, int temp);
 int panel_reset(void);
+int panel_store_daemon_postcode(void);
 
 int panel_lookup_i2c_bus(void);
 

@@ -248,3 +248,27 @@ int panel_reset(void)
 	return panel_write_byte(ATFP_REG_FPCTRL, ATFP_MASK_FPCTRL_RST);
 }
 
+int panel_store_daemon_postcode(void)
+{
+	int err;
+	int postcode_msb;
+	int postcode_lsb;
+
+	err = panel_write_byte(ATFP_REG_POST_CODE_MSB, ATFP_DAEMON_POSTCODE_MSB);
+	if ( err )
+		goto postcode_out;
+
+	err = panel_write_byte(ATFP_REG_POST_CODE_LSB, ATFP_DAEMON_POSTCODE_LSB);
+	if ( err )
+		goto postcode_out;
+
+	/* selftest: read back */
+	postcode_msb = panel_read_byte(ATFP_REG_POST_CODE_MSB);
+	postcode_lsb = panel_read_byte(ATFP_REG_POST_CODE_LSB);
+	if ((postcode_msb != ATFP_DAEMON_POSTCODE_MSB) || (postcode_lsb != ATFP_DAEMON_POSTCODE_LSB))
+		err = -EINVAL;
+
+postcode_out:
+	return err;
+}
+
