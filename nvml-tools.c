@@ -36,6 +36,9 @@ typedef struct {
 	/* reference to the DLL */
 	void *dll;
 
+	/* GPU device handle [0] */
+	nvmlDevice_t device;
+
 	/* reference to DLL symbols */
 	nvmlReturn_t (*nvmlInit)(void);
 	nvmlReturn_t (*nvmlShutdown)(void);
@@ -133,6 +136,12 @@ int nvml_init(void)
 		slogw("nvml: %d GPU cards present, however, only one will be monitored", count);
 	}
 
+	err = nvml_hdl->nvmlDeviceGetHandleByIndex(NVML_DEVICE_DEFAULT_INDEX, &nvml_hdl->device);
+	if (err != NVML_SUCCESS) {
+		sloge("nvml: could not get device handle: %d", err);
+		goto nvml_out_err1;
+	}
+
 	atexit(nvml_cleanup);
 	return 0;
 
@@ -146,15 +155,8 @@ nvml_out_err0:
 int nvml_gpu_temp_read(unsigned int *temp)
 {
 	nvmlReturn_t err;
-	nvmlDevice_t device;
 
-	err = nvml_hdl->nvmlDeviceGetHandleByIndex(NVML_DEVICE_DEFAULT_INDEX, &device);
-	if (err != NVML_SUCCESS) {
-		sloge("nvml: could not get device handle: %d", err);
-		return err;
-	}
-
-	err = nvml_hdl->nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU/*no other options*/, temp);
+	err = nvml_hdl->nvmlDeviceGetTemperature(nvml_hdl->device, NVML_TEMPERATURE_GPU/*no other options*/, temp);
 	if (err != NVML_SUCCESS) {
 		sloge("nvml: could not get device temperature: %d", err);
 	}
