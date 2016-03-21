@@ -211,27 +211,29 @@ void gpu_sensors_init(void)
 	const char *name_list;
 
 	name_list = vga_driver_name_list();
+	/* ignore not identified GPU */
+	GPU_get_temperature = undefined_gpu_get_temperature;
+
 	/*
+	 * Override 'Undefined GPU'.
+	 *
 	 * As name_list might contain more than one VGA driver name,
 	 * the order of appearance below, prioritizes which device
 	 * temperature will be reported to the front panel.
 	 */
 	if (strstr(name_list, "nvidia")) {
 		/* nvidia proprietary driver */
-		GPU_get_temperature = nvidia_gpu_get_temperature;
+		if ( !nvml_init() )
+			GPU_get_temperature = nvidia_gpu_get_temperature;
 	}
 	else if (strstr(name_list, "nouveau")) {
 		/* nouveau open source driver */
-		sensors_nouveau_init();
-		GPU_get_temperature = sensors_nouveau_read;
+		if ( !sensors_nouveau_init() )
+			GPU_get_temperature = sensors_nouveau_read;
 	}
 	else if (strstr(name_list, "i915")) {
 		/* i915 open source driver */
 		GPU_get_temperature = i915_gpu_get_temperature;
-	}
-	else {
-		/* non-identified GPU - ignore it */
-		GPU_get_temperature = undefined_gpu_get_temperature;
 	}
 }
 

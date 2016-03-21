@@ -68,8 +68,8 @@ static NvmlHandle *nvml_dll_load(void)
 	return dllh;
 
 dll_out_err1:
-	free(dllh);
 	dlclose(dll);
+	free(dllh);
 
 dll_out_err0:
 	sloge("%s", dlerrstr);
@@ -93,7 +93,6 @@ static void nvml_dll_cleanup(NvmlHandle *dllh)
 #define NVML_DEVICE_DEFAULT_INDEX	0
 
 
-static bool nvml_is_initialized = false;
 static NvmlHandle *nvml_hdl = NULL;
 
 
@@ -102,10 +101,9 @@ static void nvml_cleanup(void)
 	nvml_hdl->nvmlShutdown();
 	nvml_dll_cleanup(nvml_hdl);
 	nvml_hdl = NULL;
-	nvml_is_initialized = false;
 }
 
-static int nvml_init(void)
+int nvml_init(void)
 {
 	nvmlReturn_t err;
 	unsigned int count;
@@ -150,13 +148,6 @@ int nvml_gpu_temp_read(unsigned int *temp)
 	nvmlReturn_t err;
 	nvmlDevice_t device;
 
-	if ( !nvml_is_initialized ) {
-		err = nvml_init();
-		if (err != NVML_SUCCESS)
-			return err;
-	}
-
-	nvml_is_initialized = true;
 	err = nvml_hdl->nvmlDeviceGetHandleByIndex(NVML_DEVICE_DEFAULT_INDEX, &device);
 	if (err != NVML_SUCCESS) {
 		sloge("nvml: could not get device handle: %d", err);

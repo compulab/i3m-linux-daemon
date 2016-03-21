@@ -7,6 +7,7 @@
 #ifndef _NVML_TOOLS_H
 #define _NVML_TOOLS_H
 
+int nvml_init(void);
 int nvml_gpu_temp_read(unsigned int *temp);
 
 #endif	/* _NVML_TOOLS_H */
