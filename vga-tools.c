@@ -172,9 +172,18 @@ char *vga_driver_name_list(void)
 }
 
 
+static NvmlHandle *nvmlh;
+
 static int nvidia_gpu_get_temperature(int *temp)
 {
-	return nvml_gpu_temp_read((unsigned int *)temp);
+	nvmlReturn_t err;
+
+	err = nvmlh->nvmlDeviceGetTemperature(nvmlh->device, NVML_TEMPERATURE_GPU/*no other options*/,
+					      (unsigned int *)temp);
+	if (err != NVML_SUCCESS)
+		sloge("nvml: could not get device temperature: %d", err);
+
+	return err;
 }
 
 /*
@@ -223,8 +232,11 @@ void gpu_sensors_init(void)
 	 */
 	if (strstr(name_list, "nvidia")) {
 		/* nvidia proprietary driver */
-		if ( !nvml_init() )
+		nvmlh = nvml_init();
+		if (nvmlh != NULL) {
 			GPU_get_temperature = nvidia_gpu_get_temperature;
+			on_exit(nvml_cleanup, nvmlh);
+		}
 	}
 	else if (strstr(name_list, "nouveau")) {
 		/* nouveau open source driver */

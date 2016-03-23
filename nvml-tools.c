@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
-#include <nvml.h>
 
 #include "common.h"
+#include "nvml-tools.h"
 
 
 
@@ -32,20 +32,6 @@
 			goto gotoerr;				\
 	} while (0)
 
-typedef struct {
-	/* reference to the DLL */
-	void *dll;
-
-	/* GPU device handle [0] */
-	nvmlDevice_t device;
-
-	/* reference to DLL symbols */
-	nvmlReturn_t (*nvmlInit)(void);
-	nvmlReturn_t (*nvmlShutdown)(void);
-	nvmlReturn_t (*nvmlDeviceGetCount)(unsigned int *);
-	nvmlReturn_t (*nvmlDeviceGetHandleByIndex)(unsigned int, nvmlDevice_t *);
-	nvmlReturn_t (*nvmlDeviceGetTemperature)(nvmlDevice_t, nvmlTemperatureSensors_t, unsigned int *);
-} NvmlHandle;
 
 static NvmlHandle *nvml_dll_load(void)
 {
@@ -96,71 +82,60 @@ static void nvml_dll_cleanup(NvmlHandle *dllh)
 #define NVML_DEVICE_DEFAULT_INDEX	0
 
 
-static NvmlHandle *nvml_hdl = NULL;
-
-
-static void nvml_cleanup(void)
+void nvml_cleanup(int status, void *_dllh)
 {
-	nvml_hdl->nvmlShutdown();
-	nvml_dll_cleanup(nvml_hdl);
-	nvml_hdl = NULL;
+	NvmlHandle *dllh = (NvmlHandle *)_dllh;
+
+	dllh->nvmlShutdown();
+	nvml_dll_cleanup(dllh);
 }
 
-int nvml_init(void)
+NvmlHandle *nvml_init(void)
 {
 	nvmlReturn_t err;
 	unsigned int count;
+	NvmlHandle *dllh;
 
-	nvml_hdl = nvml_dll_load();
-	if (nvml_hdl == NULL)
-		return NVML_ERROR_LIBRARY_NOT_FOUND;
+	dllh = nvml_dll_load();
+	if (dllh == NULL)
+		goto nvml_out_err0;
 
-	err = nvml_hdl->nvmlInit();
+	err = dllh->nvmlInit();
 	if (err != NVML_SUCCESS) {
 		sloge("nvml: could not initialize NVML: %d", err);
-		goto nvml_out_err0;
+		goto nvml_out_err1;
 	}
 
-	err = nvml_hdl->nvmlDeviceGetCount(&count);
+	err = dllh->nvmlDeviceGetCount(&count);
 	if (err != NVML_SUCCESS) {
 		sloge("nvml: could not get device count: %d", err);
-		goto nvml_out_err1;
+		goto nvml_out_err2;
 	}
 
 	if (count == 0) {
 		sloge("nvml: no GPU card present");
 		err = NVML_ERROR_NOT_FOUND;
-		goto nvml_out_err1;
+		goto nvml_out_err2;
 	}
 	else if (count > 1) {
 		slogw("nvml: %d GPU cards present, however, only one will be monitored", count);
 	}
 
-	err = nvml_hdl->nvmlDeviceGetHandleByIndex(NVML_DEVICE_DEFAULT_INDEX, &nvml_hdl->device);
+	err = dllh->nvmlDeviceGetHandleByIndex(NVML_DEVICE_DEFAULT_INDEX, &dllh->device);
 	if (err != NVML_SUCCESS) {
 		sloge("nvml: could not get device handle: %d", err);
-		goto nvml_out_err1;
+		goto nvml_out_err2;
 	}
 
-	atexit(nvml_cleanup);
-	return 0;
+	return dllh;
+
+nvml_out_err2:
+	dllh->nvmlShutdown();
 
 nvml_out_err1:
-	nvml_hdl->nvmlShutdown();
+	nvml_dll_cleanup(dllh);
 
 nvml_out_err0:
-	return err;
-}
-
-int nvml_gpu_temp_read(unsigned int *temp)
-{
-	nvmlReturn_t err;
-
-	err = nvml_hdl->nvmlDeviceGetTemperature(nvml_hdl->device, NVML_TEMPERATURE_GPU/*no other options*/, temp);
-	if (err != NVML_SUCCESS) {
-		sloge("nvml: could not get device temperature: %d", err);
-	}
-
-	return err;
+	return NULL;
 }
 
