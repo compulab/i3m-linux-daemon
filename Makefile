@@ -8,6 +8,8 @@ SOURCES = main.c panel.c sensors.c queue.c thread-pool.c domain-logic.c \
 	i2c-tools.c stats.c cpu-freq.c vga-tools.c nvml-tools.c \
 	dlist.c watchdog.c options.c hdd-info.c
 
+SUBDIRS = gpu-temp
+
 OBJDIR  = obj
 BINDIR  = bin
 OUTFILE = $(BINDIR)/airtop-fpsvc
@@ -31,7 +33,9 @@ else
 	CFLAGS += -O2
 endif
 
-all: $(SOURCES) $(OBJS) $(BINDIR)
+all: fpsvc subdirs
+
+fpsvc: $(SOURCES) $(OBJS) $(BINDIR)
 	$(LINK_CMD) $(OBJS) $(LLIBS) -o $(OUTFILE)
 	$(STRIP_CMD) $(OUTFILE)
 
@@ -43,6 +47,12 @@ $(OBJDIR):
 
 $(BINDIR):
 	$(MKDIR_CMD) $(BINDIR)
+
+.PHONY: subdirs $(SUBDIRS)
+subdirs: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 .PHONY: clean
 clean:
