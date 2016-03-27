@@ -118,8 +118,12 @@ static bool is_nodata_line(const char *line)
 		return true;
 
 	for (i = 0; line[i] != '\0'; ++i) {
-		if ( !isspace(line[i]) )
+		if ( !isspace(line[i]) ) {
+			if (line[i] == '#')
+				break;
+
 			return false;
+		}
 	}
 
 	return true;
@@ -149,9 +153,6 @@ static int options_parse_configfile(Options *opts, const char *filename)
 	while ( !feof(config) ) {
 		line = fgets(buff, sizeof(buff), config);
 		if (is_nodata_line(line)) {
-			continue;
-		}
-		else if (starts_with("#", line, k)) {
 			continue;
 		}
 		else if (starts_with("i2c-bus=", line, k)) {
