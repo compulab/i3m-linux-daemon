@@ -40,6 +40,15 @@
 		}				\
 	} while (0)
 
+#define clamp(val, min, max) ({			\
+	typeof(val) __val = (val);		\
+	typeof(min) __min = (min);		\
+	typeof(max) __max = (max);		\
+	(void) (&__val == &__min);		\
+	(void) (&__val == &__max);		\
+	__val = __val < __min ? __min: __val;	\
+	__val > __max ? __max: __val; })
+
 
 typedef struct {
 	unsigned int powerLimitMin;
@@ -221,16 +230,18 @@ int main(int argc, char *argv[])
 	initialize();
 	atexit(cleanup);
 
-	/* override pre-set power limit */
-	if (options.power_limit_set) {
-		gpu_power.powerLimitActual = options.power_limit;
-	}
-
 	signal(SIGTERM, SIGTERM_handler);
 	signal(SIGINT, SIGTERM_handler);	/* Ctrl-C */
 	signal(SIGALRM, SIGALRM_handler);
 
 	power_limit_prev = gpu_power.powerLimitActual;
+
+	/* override pre-set power limit */
+	if (options.power_limit_set) {
+		gpu_power.powerLimitActual = clamp(options.power_limit,
+						   gpu_power.powerLimitMin, gpu_power.powerLimitMax);
+	}
+
 	while ( 1 ) {
 		alarm(TEMP_CTRL_DELTAT);
 
