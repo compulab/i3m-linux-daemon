@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <syslog.h>
 
+#include "gpu-options.h"
 #include "../nvml-tools.h"
 
 
@@ -29,7 +30,6 @@
 #define slogd(...)			syslog(LOG_DEBUG,   __VA_ARGS__)
 
 #define GPUD_SYSLOG_ID			"gpu-thermd"
-#define GPUD_SYSLOG_DEFLVL		LOG_DEBUG
 
 
 #define goto_if(cond, line, label)		\
@@ -48,43 +48,8 @@ typedef struct {
 } GPUPower;
 
 static GPUPower gpu_power;
-static unsigned int gpu_temp_limit;
+static GPUOptions options;
 NvmlHandle *nvmlh;
-
-
-/* command line parsing */
-static void print_help_message_and_exit(const char *name)
-{
-	fprintf(stderr, "Usage: %s [OPTION] [OPTION] ... \n", name);
-
-	fprintf(stderr, "\nCompuLab GPU thermal daemon. \n");
-	fprintf(stderr, "Keep GPU temperature under preset value. \n");
-
-	fprintf(stderr, "\nCommand line options: \n");
-	fprintf(stderr, "  --temp-limit=T  GPU temperature limit in degC \n");
-	fprintf(stderr, "  --help          display this help and exit \n");
-
-	exit(1);
-}
-
-static void options_process_or_abort(int argc, char *argv[])
-{
-	int i;
-	bool temp_limit_valid = false;
-
-	for (i = 1; i < argc; ++i) {
-		if ( !strcmp("--help", argv[i]) )
-			goto process_show_help;
-
-		temp_limit_valid = (sscanf(argv[i], "--temp-limit=%d", &gpu_temp_limit) > 0);
-	}
-
-	if (temp_limit_valid)
-		return;
-
-process_show_help:
-	print_help_message_and_exit(basename(argv[0]));
-}
 
 
 static void initialize(void)
@@ -95,7 +60,7 @@ static void initialize(void)
 
 	/* set up logging */
 	openlog(GPUD_SYSLOG_ID, LOG_PID, LOG_USER);
-	setlogmask(LOG_UPTO(GPUD_SYSLOG_DEFLVL));
+	setlogmask(LOG_UPTO(options.loglevel));
 
 	/*
 	 * NVML library is loaded manually, in order to cope gracefully
@@ -252,9 +217,14 @@ int main(int argc, char *argv[])
 	unsigned int power_limit;
 	unsigned int power_limit_prev;
 
-	options_process_or_abort(argc, argv);
+	gpu_options_process_or_abort(&options, argc, argv);
 	initialize();
 	atexit(cleanup);
+
+	/* override pre-set power limit */
+	if (options.power_limit_set) {
+		gpu_power.powerLimitActual = options.power_limit;
+	}
 
 	signal(SIGTERM, SIGTERM_handler);
 	signal(SIGINT, SIGTERM_handler);	/* Ctrl-C */
@@ -268,7 +238,7 @@ int main(int argc, char *argv[])
 						NVML_TEMPERATURE_GPU/*no other options*/,
 						&temp);
 
-		power_limit = pid_control(temp, gpu_temp_limit);
+		power_limit = pid_control(temp, options.temp_limit);
 		if (power_limit != power_limit_prev) {
 			power_limit_prev = power_limit;
 			nvmlh->nvmlDeviceSetPowerManagementLimit(nvmlh->device, power_limit);

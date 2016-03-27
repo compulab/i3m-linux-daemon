@@ -4,7 +4,7 @@
 # License: GNU GPLv2 or later, at your option
 #
 
-SOURCES = gpu-thermald.c ../nvml-tools.c
+SOURCES = gpu-thermald.c gpu-options.c ../nvml-tools.c
 
 OBJDIR  = ../obj
 BINDIR  = ../bin
