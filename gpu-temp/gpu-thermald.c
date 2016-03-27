@@ -28,7 +28,7 @@
 #define slogi(...)			syslog(LOG_INFO,    __VA_ARGS__)
 #define slogd(...)			syslog(LOG_DEBUG,   __VA_ARGS__)
 
-#define GPUD_SYSLOG_ID			"gpu-thermlim"
+#define GPUD_SYSLOG_ID			"gpu-thermd"
 #define GPUD_SYSLOG_DEFLVL		LOG_DEBUG
 
 
@@ -130,6 +130,7 @@ init_out1:
 
 init_out0:
 	sloge("init: could not initialize NVML: %d [line %d]", err, line);
+	fprintf(stderr, "init: could not initialize NVML: %d [line %d] \n", err, line);
 	closelog();
 	exit(1);
 }
