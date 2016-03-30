@@ -10,10 +10,6 @@
 #include <stdbool.h>
 
 
-#define GPUD_CONFIGFILE			"/etc/gpu-thermald.conf"
-#define GPUD_DEFAULT_TEMP		100
-
-
 typedef struct {
 	bool help;
 	unsigned int temp_limit;

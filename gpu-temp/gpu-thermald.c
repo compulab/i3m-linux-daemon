@@ -16,20 +16,10 @@
 #include <signal.h>
 #include <libgen.h>
 #include <unistd.h>
-#include <syslog.h>
 
+#include "gpu-thermald.h"
 #include "gpu-options.h"
 #include "../nvml-tools.h"
-
-
-/* logging: syslog */
-#define sloge(...)			syslog(LOG_ERR,     __VA_ARGS__)
-#define slogw(...)			syslog(LOG_WARNING, __VA_ARGS__)
-#define slogn(...)			syslog(LOG_NOTICE,  __VA_ARGS__)
-#define slogi(...)			syslog(LOG_INFO,    __VA_ARGS__)
-#define slogd(...)			syslog(LOG_DEBUG,   __VA_ARGS__)
-
-#define GPUD_SYSLOG_ID			"gpu-thermd"
 
 
 #define goto_if(cond, line, label)		\

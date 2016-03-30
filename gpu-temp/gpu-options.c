@@ -14,6 +14,7 @@
 #include <libgen.h>
 #include <syslog.h>
 
+#include "gpu-thermald.h"
 #include "gpu-options.h"
 
 
