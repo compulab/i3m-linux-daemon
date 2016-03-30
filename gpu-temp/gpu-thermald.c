@@ -140,17 +140,17 @@ static void SIGALRM_handler(int signo)
 
 /* (almost) no control range */
 #define ncP_FACTOR			0	/* -- */
-#define ncI_FACTOR			100.0
+#define ncI_FACTOR			(20.0 * TEMP_CTRL_DELTAT)
 #define ncD_FACTOR			0	/* -- */
 
 /* normal control range */
 #define nP_FACTOR			1500.0
-#define nI_FACTOR			20.0
+#define nI_FACTOR			(4.0 * TEMP_CTRL_DELTAT)
 #define nD_FACTOR			0	/* -- */
 
 /* emergency control range */
 #define eP_FACTOR			1500.0
-#define eI_FACTOR			200.0
+#define eI_FACTOR			(40.0 * TEMP_CTRL_DELTAT)
 #define eD_FACTOR			0	/* -- */
 
 static double err_integral = 0.0;
