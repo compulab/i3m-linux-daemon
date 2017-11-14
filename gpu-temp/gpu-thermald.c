@@ -53,7 +53,7 @@ NvmlHandle *nvmlh;
 
 static void initialize(void)
 {
-	nvmlReturn_t err;
+	nvmlReturn_t err = NVML_ERROR_UNINITIALIZED;
 	nvmlEnableState_t state = NVML_FEATURE_DISABLED;
 	int line;
 
