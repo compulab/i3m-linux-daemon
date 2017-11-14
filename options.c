@@ -20,6 +20,7 @@
 #include "options.h"
 #include "common.h"
 #include "registers.h"
+#include "auto_generated.h"
 
 
 #define starts_with(substr, str, idx)	((str != NULL) && (((idx) = strlen(substr)), !strncmp((substr), (str), (idx))))
@@ -53,6 +54,7 @@ static bool loglevel_conv_string_to_int(const char *s_loglevel, int *i_loglevel)
 static int options_parse_cmdline(Options *opts, int argc, char *argv[])
 {
 	const struct option long_options[] = {
+		{"version",		no_argument,		0,	'v'},
 		{"help",		no_argument,		0,	'h'},
 		{"info",		no_argument,		0,	'i'},
 		{"i2c-bus",		required_argument,	0,	'b'},
@@ -105,6 +107,9 @@ static int options_parse_cmdline(Options *opts, int argc, char *argv[])
 			break;
 		case 'f':
 			strncpy(opts->configfile, optarg, sizeof(opts->configfile));
+			break;
+		case 'v':
+			opts->version = true;
 			break;
 		}
 	}
@@ -200,6 +205,15 @@ configfile_out_err:
 	return -EINVAL;
 }
 
+static void print_version_and_exit(const char *name)
+{
+	fprintf(stderr, "%s version %s\n", name, VERSION);
+	fprintf(stderr, "Built on %s %s\n", __DATE__, __TIME__);
+	fprintf(stderr, "Copyright (C) 2017, CompuLab ltd.\n");
+
+	exit(1);
+}
+
 static void print_help_message_and_exit(const char *name)
 {
 	fprintf(stderr, "Usage: %s [OPTION] [OPTION] ... \n", name);
@@ -258,6 +272,8 @@ void options_process_or_abort(Options *opts, int argc, char *argv[])
 	if ((err < 0) || (opts->help))
 		print_help_message_and_exit(basename(argv[0]));
 
+	if (opts->version)
+		print_version_and_exit(basename(argv[0]));
 	err = options_parse_configfile(opts, opts->configfile);
 	if (err < 0)
 		exit(1);
