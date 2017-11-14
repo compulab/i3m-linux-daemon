@@ -36,11 +36,14 @@ endif
 all: fpsvc subdirs
 
 fpsvc: $(SOURCES) $(OBJS) $(BINDIR)
-	$(LINK_CMD) $(OBJS) $(LLIBS) -o $(OUTFILE)
-	$(STRIP_CMD) $(OUTFILE)
+	@echo 'LD    $@'
+	@$(LINK_CMD) $(OBJS) $(LLIBS) -o $(OUTFILE)
+	@echo 'STRIP $@'
+	@$(STRIP_CMD) $(OUTFILE)
 
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
-	$(COMPILE_CMD) -c $+ -o $@
+	@echo 'CC    $@'
+	@$(COMPILE_CMD) -c $+ -o $@
 
 $(OBJDIR):
 	$(MKDIR_CMD) $(OBJDIR)
@@ -52,10 +55,12 @@ $(BINDIR):
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	@$(MAKE) -C $@
 
 .PHONY: clean
 clean:
-	$(RM_CMD) $(OBJDIR)/*
-	$(RM_CMD) $(BINDIR)/*
+	@echo 'CLEAN $(OBJDIR)'
+	@$(RM_CMD) $(OBJDIR)/*
+	@echo 'CLEAN $(BINDIR)'
+	@$(RM_CMD) $(BINDIR)/*
 
