@@ -17,7 +17,7 @@ OUTFILE = $(BINDIR)/airtop-fpsvc
 NVMLDIR = nvml
 
 OBJS    = $(SOURCES:%.c=$(OBJDIR)/%.o)
-CFLAGS  = -Wall -I$(NVMLDIR)
+CFLAGS  = -Wall -I$(NVMLDIR) -Wno-format-truncation
 LFLAGS  = -Wall -rdynamic
 LLIBS   = -lsensors -lpthread -lm -ldl -latasmart -li2c
 COMPILE_CMD = gcc $(CFLAGS)
