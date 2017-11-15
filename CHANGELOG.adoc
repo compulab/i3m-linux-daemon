@@ -1,0 +1,15 @@
+= Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on http://keepachangelog.com/[Keep a Changelog]
+and this project adheres to http://semver.org/[Semantic Versioning].
+
+== v1.0.0 - 2016-03-31
+=== Added
+* Passing the following information to the Front Panel:
+** CPU Temperature
+** CPU Frequency
+** GPU Temperature
+** HDD Temperature and volume (currently there is no FP request for HDD volume)
+* Limiting GPU power and/or temperature - GPU Thermal daemon

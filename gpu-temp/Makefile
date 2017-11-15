@@ -30,15 +30,19 @@ else
 	CFLAGS += -O2
 endif
 
-all: $(SOURCES) $(OBJS) $(BINDIR)
-	$(LINK_CMD) $(OBJS) $(LLIBS) -o $(OUTFILE)
-	$(STRIP_CMD) $(OUTFILE)
+gpu-temp: $(SOURCES) $(OBJS) $(BINDIR)
+	@echo 'LD    $@'
+	@$(LINK_CMD) $(OBJS) $(LLIBS) -o $(OUTFILE)
+	@echo 'STRIP $@'
+	@$(STRIP_CMD) $(OUTFILE)
 
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
-	$(COMPILE_CMD) -c $+ -o $@
+	@echo 'CC    $@'
+	@$(COMPILE_CMD) -c $+ -o $@
 
 $(OBJDIR)/%.o: ../%.c | $(OBJDIR)
-	$(COMPILE_CMD) -c $+ -o $@
+	@echo 'CC    $@'
+	@$(COMPILE_CMD) -c $+ -o $@
 
 $(OBJDIR):
 	$(MKDIR_CMD) $(OBJDIR)

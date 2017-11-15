@@ -13,6 +13,7 @@
 typedef struct {
 	bool help;
 	bool info;
+	bool version;
 	int i2c_bus;
 	unsigned int i2c_delay;
 	int poll_cycle;
