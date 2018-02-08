@@ -220,7 +220,8 @@ static void main_thread(void *priv_context, void *shared_context)
 	long request;
 	InProcessingBitmap *processing = (InProcessingBitmap *)shared_context;
 
-	request_bitmap = panel_get_pending_requests();
+	request_bitmap = ATFP_MASK_PENDR0_HDDTR | ATFP_MASK_PENDR0_CPUFR |
+			 ATFP_MASK_PENDR0_CPUTR | ATFP_MASK_PENDR0_GPUTR;
 
 	/* (optionally) disable particular functions */
 	request_bitmap &= ~options.disable;
