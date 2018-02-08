@@ -151,7 +151,7 @@ int panel_lookup_i2c_bus(void)
 		close(fd);
 
 		if (!strcmp("CLFP", signature)) {
-			ret = i;
+			ret = adapters[i].nr;
 			goto lookup_out;
 		}
 	}
