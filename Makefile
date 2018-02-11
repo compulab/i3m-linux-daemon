@@ -6,7 +6,7 @@
 
 # This project adheres to Semantic Versioning
 MAJOR = 1
-MINOR = 0
+MINOR = 1
 PATCH = 0
 FPSRV_VERSION = $(MAJOR).$(MINOR).$(PATCH)
 
