@@ -228,6 +228,7 @@ static void print_help_message_and_exit(const char *name)
 	fprintf(stderr, "  --loglevel=LEVEL   print to system log messages up to LEVEL. LEVEL may be either [notice], info, debug \n");
 	fprintf(stderr, "  --configfile=PATH  path to (optional) configuration file. By default '/etc/airtop-fpsvc.conf' will be used. \n");
 	fprintf(stderr, "  --info             display brief system information relevant for this daemon and exit \n");
+	fprintf(stderr, "  --version          display daemon version and exit \n");
 	fprintf(stderr, "  --help             display this help and exit \n");
 
 	fprintf(stderr, "\nConfiguration file options: \n");
