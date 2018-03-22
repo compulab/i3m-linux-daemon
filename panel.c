@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <asm-generic/errno-base.h>
-#include <i2c/smbus.h>
+#include <linux/i2c-dev.h>
 
 #include "panel.h"
 #include "registers.h"
